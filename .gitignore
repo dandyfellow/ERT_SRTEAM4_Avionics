@@ -1,0 +1,23 @@
+# ESP-IDF build artifacts
+build/
+*.bin
+*.elf
+*.map
+*.pyc
+*.pyo
+__pycache__/
+.DS_Store
+
+# SDK config
+sdkconfig
+sdkconfig.old
+
+# IDE files
+.vscode/
+.idea/
+.clion/
+
+# Python virtualenv
+.python_env/
+*.env
+*.venv
