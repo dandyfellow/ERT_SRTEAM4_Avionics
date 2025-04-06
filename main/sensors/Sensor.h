@@ -16,6 +16,4 @@ public:
     static void testing();
 };
 
-
-
 #endif //SENSOR_H

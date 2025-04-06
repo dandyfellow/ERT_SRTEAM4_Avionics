@@ -12,4 +12,14 @@ idf_component_register(
             "sensors"
             "filters"
             "utils"
+
+        REQUIRES
+            driver
+            freertos
+            esp_idf_lib_helpers
+            i2cdev
+            log
+            bmp280
+
+
 )
