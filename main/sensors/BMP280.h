@@ -15,11 +15,13 @@ extern "C" {
 
 class BMP280 : public Sensor {
 public:
+    //For all the overriden functions, check the SuperClass
+    //Sensor. -> go to Sensor.h
+
     BMP280();
     ~BMP280() override;
-
     bool init() override;
-    void read() override;
+    bool read() override;
     void display() override;
 
     static void testing();
@@ -28,8 +30,8 @@ public:
     float getPressure() const;
 
 private:
-    bmp280_t dev;
-    float temperature;
+    bmp280_t dev; // the bmp280 parameters (I think, not sure :/ )
+    float temperature; //BMP280 has two readings, pressure and temp, BME280 has humidity on top of that
     float pressure;
 };
 
