@@ -86,7 +86,6 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(i2cdev_init());
     xTaskCreatePinnedToCore(bmp280_test, "bmp280_test", configMINIMAL_STACK_SIZE * 8, NULL, 5, NULL, APP_CPU_NUM);
 
-
     //xTaskCreate(Blinking, "Blinking", 4096, NULL, 5, NULL);
     /*
     BMP280 bmp;
