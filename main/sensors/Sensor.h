@@ -4,11 +4,12 @@
 
 #ifndef SENSOR_H
 #define SENSOR_H
-
+#include <soc/gpio_num.h>
 
 
 class Sensor {
 public:
+
        // To be finished
     virtual ~Sensor() = default;
 
@@ -29,6 +30,10 @@ public:
     // just tests the skeleton of the project (outputs "testing
     // bla bla bla" in the serial monitor)
     static void testing();
+
+protected:
+    //static constexpr gpio_num_t I2C_MASTER_SDA = GPIO_NUM_21;
+    //static constexpr gpio_num_t I2C_MASTER_SCL = GPIO_NUM_22;
 };
 
 #endif //SENSOR_H

@@ -20,6 +20,7 @@ idf_component_register(
             i2cdev
             log
             bmp280
+            mpu6050
 
 
 )
