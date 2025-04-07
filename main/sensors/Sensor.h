@@ -31,9 +31,11 @@ public:
     // bla bla bla" in the serial monitor)
     static void testing();
 
+
+
 protected:
-    //static constexpr gpio_num_t I2C_MASTER_SDA = GPIO_NUM_21;
-    //static constexpr gpio_num_t I2C_MASTER_SCL = GPIO_NUM_22;
+    static constexpr gpio_num_t I2C_MASTER_SDA = GPIO_NUM_21;
+    static constexpr gpio_num_t I2C_MASTER_SCL = GPIO_NUM_22;
 };
 
 #endif //SENSOR_H

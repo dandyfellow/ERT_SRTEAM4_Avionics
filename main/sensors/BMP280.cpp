@@ -15,7 +15,7 @@ void BMP280::testing() {
     ESP_LOGI("BMP280", "Testing BMP280");
 }
 
-static const char *TAG = "BMP280_Class"; //bruh idk what this is chatgpt is a menace
+static const char *TAG = "BMP280";
 
 BMP280::BMP280()
 {
@@ -65,9 +65,5 @@ bool BMP280::read() // a rework of UncleRus' example
     }
     return true;
 }
-
-float BMP280::getTemperature() const {return temperature;}
-
-float BMP280::getPressure() const {return pressure;}
 
 void BMP280::display() {ESP_LOGI(TAG, "Temperature: %.2f °C | Pressure: %.2f Pa",temperature, pressure);}

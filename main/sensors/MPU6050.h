@@ -21,6 +21,8 @@ public:
     bool init() override; //tries to init at most 10 times
     bool read() override;
     void display() override;
+    mpu6050_acceleration_t get_accel() const {return accel;}
+    mpu6050_rotation_t get_rotation() const {return rotation;}
 
     static void testing();
 private:

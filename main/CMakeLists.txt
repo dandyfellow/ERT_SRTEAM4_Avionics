@@ -6,6 +6,8 @@ idf_component_register(
             "sensors/BMP280.cpp"
             "filters/Madgwick.cpp"
             "utils/I2CManager.cpp"
+            "sensors/HMC5883L.cpp"
+            "utils/Tools.cpp"
 
         INCLUDE_DIRS
             "."
@@ -21,6 +23,6 @@ idf_component_register(
             log
             bmp280
             mpu6050
-
+            qmc5883l
 
 )

@@ -11,10 +11,9 @@ extern "C" {
 }
 
 #define ADDR MPU6050_I2C_ADDRESS_LOW //0x68
-#define I2C_MASTER_SDA GPIO_NUM_21
-#define I2C_MASTER_SCL GPIO_NUM_22
 
-static const char *TAG = "mpu6050 (actually a mpu6500)";
+
+static const char *TAG = "MPU6500)";
 
 
 void MPU6050::testing() {

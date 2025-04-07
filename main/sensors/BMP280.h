@@ -26,8 +26,8 @@ public:
 
     static void testing();
 
-    float getTemperature() const;
-    float getPressure() const;
+    float get_temperature() const {return temperature;}
+    float get_pressure() const {return pressure;}
 
 private:
     bmp280_t dev; // the bmp280 parameters (I think, not sure :/ )
