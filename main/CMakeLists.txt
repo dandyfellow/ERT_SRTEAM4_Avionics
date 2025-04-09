@@ -4,7 +4,7 @@ idf_component_register(
             "sensors/Sensor.cpp"
             "sensors/MPU6050.cpp"
             "sensors/BMP280.cpp"
-            "filters/Madgwick.cpp"
+            "filters/MadgwickAHRS.cpp"
             "utils/I2CManager.cpp"
             "sensors/HMC5883L.cpp"
             "utils/Tools.cpp"
@@ -15,6 +15,7 @@ idf_component_register(
             "filters"
             "utils"
 
+
         REQUIRES
             driver
             freertos
@@ -24,5 +25,5 @@ idf_component_register(
             bmp280
             mpu6050
             qmc5883l
-
+            esp_timer
 )

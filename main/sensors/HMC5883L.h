@@ -19,6 +19,10 @@ public:
     bool read() override;
     void display() override;
     qmc5883l_data_t get_data() const {return data;}
+    float get_mag_x() const {return data.x;}
+    float get_mag_y() const {return data.y;}
+    float get_mag_z() const {return data.z;}
+
 
     static void testing();
 private:

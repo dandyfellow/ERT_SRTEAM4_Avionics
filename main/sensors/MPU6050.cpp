@@ -81,5 +81,5 @@ bool MPU6050::read() {
 }
 void MPU6050::display() {
     ESP_LOGI(TAG, "Acceleration: x=%.4f   y=%.4f   z=%.4f", accel.x, accel.y, accel.z);
-    ESP_LOGI(TAG, "Rotation:     x=%.4f   y=%.4f   z=%.4f", rotation.x, rotation.y, rotation.z);
+    ESP_LOGI(TAG, "Gyroscope:    x=%.4f   y=%.4f   z=%.4f", rotation.x, rotation.y, rotation.z);
 }

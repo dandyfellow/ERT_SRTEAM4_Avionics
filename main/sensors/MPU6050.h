@@ -24,6 +24,15 @@ public:
     mpu6050_acceleration_t get_accel() const {return accel;}
     mpu6050_rotation_t get_rotation() const {return rotation;}
 
+    float get_accel_x() const {return accel.x;}
+    float get_accel_y() const {return accel.y;}
+    float get_accel_z() const {return accel.z;}
+
+    float get_gyro_x() const {return rotation.x;}
+    float get_gyro_y() const {return rotation.y;}
+    float get_gyro_z() const {return rotation.z;}
+
+
     static void testing();
 private:
     mpu6050_dev_t dev;
