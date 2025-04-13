@@ -52,13 +52,8 @@ void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, floa
 	float hx, hy;
 	float _2q0mx, _2q0my, _2q0mz, _2q1mx, _2bx, _2bz, _4bx, _4bz, _2q0, _2q1, _2q2, _2q3, _2q0q2, _2q2q3, q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;
 
-	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation)
-	/*
-	if((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
-		updateIMU(gx, gy, gz, ax, ay, az);
-		return;
-	}
-	*/
+
+
 	// Convert gyroscope degrees/sec to radians/sec
 	gx *= 0.0174533f;
 	gy *= 0.0174533f;
@@ -148,9 +143,10 @@ void MadgwickAHRS::update(float gx, float gy, float gz, float ax, float ay, floa
 	anglesComputed = 0;
 }
 
+
 //-------------------------------------------------------------------------------------------
 // IMU algorithm update
-
+/*
 void MadgwickAHRS::updateIMU(float gx, float gy, float gz, float ax, float ay, float az) {
 	float recipNorm;
 	float s0, s1, s2, s3;
@@ -224,7 +220,7 @@ void MadgwickAHRS::updateIMU(float gx, float gy, float gz, float ax, float ay, f
 	q3 *= recipNorm;
 	anglesComputed = 0;
 }
-
+*/
 //-------------------------------------------------------------------------------------------
 // Fast inverse square-root
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root

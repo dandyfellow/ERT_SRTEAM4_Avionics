@@ -26,4 +26,5 @@ idf_component_register(
             mpu6050
             qmc5883l
             esp_timer
+            QMC5883LArduino
 )

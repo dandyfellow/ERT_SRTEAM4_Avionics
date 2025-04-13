@@ -74,10 +74,9 @@ bool MPU6050::init() {
     return true;
 }
 bool MPU6050::read() {
-
-    ESP_ERROR_CHECK(mpu6050_get_motion(&dev, &accel, &rotation));
-    return true;
-
+    if(mpu6050_get_motion(&dev, &accel, &rotation) == ESP_OK) return true;
+    ESP_LOGE(TAG, "Could not read data");
+    return false;
 }
 void MPU6050::display() {
     ESP_LOGI(TAG, "Acceleration: x=%.4f   y=%.4f   z=%.4f", accel.x, accel.y, accel.z);

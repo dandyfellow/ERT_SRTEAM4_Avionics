@@ -39,7 +39,7 @@
 #include <esp_idf_lib_helpers.h>
 #include "qmc5883l.h"
 
-#define I2C_FREQ_HZ 400000 // 400kHz
+#define I2C_FREQ_HZ 1000000 // 400kHz -> changes to 1MHz for ESP-IDF
 
 #define REG_XOUT_L 0x00
 #define REG_XOUT_H 0x01
