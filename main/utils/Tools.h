@@ -7,24 +7,24 @@
 #include <cstdio>
 
 struct IMUData10Axis {
-    float ax, ay, az; // Accelerometer data
-    float gx, gy, gz; // Gyroscope data
-    float mx, my, mz; // Magnetometer data
-    float pressure; // Pressure data
-    float temperature; // Temperature data
+    float ax = 0, ay = 0, az = 0; // Accelerometer data [g]
+    float gx = 0, gy = 0, gz = 0; // [deg/s]
+    float mx = 0, my = 0, mz = 0; // Magnetometer data
+    float pressure = 0; // [Pa]
+    float temperature = 0; // [C]
+    float altitude = 0; // [meters]
 };
 
-void displayIMUData(const IMUData10Axis& data) {
-    printf("Accelerometer: ax=%.2f, ay=%.2f, az=%.2f\n", data.ax, data.ay, data.az);
-    printf("Gyroscope: gx=%.2f, gy=%.2f, gz=%.2f\n", data.gx, data.gy, data.gz);
-    printf("Magnetometer: mx=%.2f, my=%.2f, mz=%.2f\n", data.mx, data.my, data.mz);
-    printf("Pressure: %.2f hPa\n", data.pressure);
-    printf("Temperature: %.2f °C\n", data.temperature);
-}
+
 
 class Tools {
 public:
     static void Blinking(void* param);
+    static void displayIMUData(const IMUData10Axis& data);
+    static void display_data_for_python(
+        const double& pitch, const double& yaw, const double& roll,
+        const double& ax,const double& ay, const double& az,
+        const double& temp, const double& pressure, const double& height);
 
 
 private:

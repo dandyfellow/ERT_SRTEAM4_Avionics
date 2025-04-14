@@ -22,7 +22,24 @@ extern "C" { // C includes
 
 
 static const char *TAG = "Main"; // tag for logging
-#define SAMPLE_FREQ 50 // Hz | t = 1/SAMPLE_FREQ
+#define SAMPLE_FREQ 20 // Hz | t[ms]= 1000/SAMPLE_FREQ
+/*
+ *1000Hz = 1ms
+ *750Hz = 1.33ms
+ *500Hz = 2ms
+ *250Hz = 4ms
+ *200Hz = 5ms
+ *150Hz = 6.67ms
+ *100Hz = 10ms
+ *50Hz = 20ms
+ *25Hz = 40ms
+ *20Hz = 50ms
+ *13.33Hz = 75ms
+ *10Hz = 100ms -> too low
+ *5Hz = 200ms
+ *2Hz = 500ms
+ *1Hz = 1000ms
+ */
 //=================================================================================================================================0
 
 //=================================================================================================================================0
@@ -128,11 +145,11 @@ extern "C" void app_main(void)
         if(!bmp.read()) bmp.init();
         if(!mpu.read()) mpu.init();
         if(!hmc.read()) hmc.init();
-    /*
-        bmp.display();
-        mpu.display();
-        hmc.display();
-    */
+
+        //bmp.display();
+        //mpu.display();
+        //hmc.display();
+
         // process data from with Madgwick filter
         data.pressure = bmp.get_pressure();
         data.temperature = bmp.get_temperature();
@@ -152,11 +169,16 @@ extern "C" void app_main(void)
             data.mx, data.my, data.mz
         );
 
-        //displayIMUData(data); // Display the data
+        //Tools::displayIMUData(data); // Display the data
         // Print the results
         //ESP_LOGI(TAG, "Orientation: %.2f %.2f %.2f", madgwick.getYaw(), madgwick.getPitch(), madgwick.getRoll());
-        ESP_LOGI(TAG, "Orientation (rad): %.2f %.2f %.2f", madgwick.getYawRadians(), madgwick.getPitchRadians(), madgwick.getRollRadians());
+        //ESP_LOGI(TAG, "Orientation (rad): %.2f %.2f %.2f", madgwick.getYawRadians(), madgwick.getPitchRadians(), madgwick.getRollRadians());
 
+        Tools::display_data_for_python(
+            madgwick.getPitchRadians(), madgwick.getYawRadians(), madgwick.getRollRadians(),
+            data.ax, data.ay, data.az,
+            data.temperature, data.pressure, bmp.get_altitude()
+        );
         //printf("==================================================================================|\n");
         if(SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000./SAMPLE_FREQ));
         if(SAMPLE_FREQ == 0) vTaskDelay(pdMS_TO_TICKS(1)); // Keep cpu breathing

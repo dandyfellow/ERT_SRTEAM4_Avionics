@@ -28,11 +28,13 @@ public:
 
     float get_temperature() const {return temperature;}
     float get_pressure() const {return pressure;}
+    float get_altitude() const {return altitude;}
 
 private:
     bmp280_t dev; // the bmp280 parameters (I think, not sure :/ )
     float temperature; //BMP280 has two readings, pressure and temp, BME280 has humidity on top of that
     float pressure;
+    double altitude;
 };
 
 

@@ -7,10 +7,14 @@
 #include <cstring>
 #include <esp_log.h>
 #include <string>
+#include <cmath>
 
 #define I2C_MASTER_SDA GPIO_NUM_21
 #define I2C_MASTER_SCL GPIO_NUM_22
 
+//===============================================PROTOYPES===================================================================================0
+float calculateHeightFromPressure(float pressure, float seaLevelPressure = 1013.25f);
+//===============================================END_OF_PROTOYPES===================================================================================0
 void BMP280::testing() {
     ESP_LOGI("BMP280", "Testing BMP280");
 }
@@ -63,7 +67,14 @@ bool BMP280::read() // a rework of UncleRus' example
         pressure = 0; //since I will display the results regarding of if the readings failed, set to 0 to see the fail.
         return false;
     }
+    // Convert pressure to altitude
+    altitude = calculateHeightFromPressure(pressure);
     return true;
 }
 
-void BMP280::display() {ESP_LOGI(TAG, "Temperature: %.2f °C | Pressure: %.2f Pa",temperature, pressure);}
+void BMP280::display() {ESP_LOGI(TAG, "Temperature: %.2f °C | Pressure: %.2f Pa | Altitude: %.2f m",temperature, pressure, altitude);}
+
+float calculateHeightFromPressure(float pressure, float seaLevelPressure) {
+    return 44330.0f * (1.0f - pow((pressure/100) / seaLevelPressure, 0.1903f));
+}
+

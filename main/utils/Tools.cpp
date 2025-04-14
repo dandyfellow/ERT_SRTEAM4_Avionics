@@ -13,9 +13,7 @@ extern "C" {
 }
 
 void Tools::Blinking(void* param) { //for testing purpouses
-
 #define LED_PIN GPIO_NUM_2
-
 
     bool led_on = false;
     unsigned int count = 0;
@@ -28,4 +26,23 @@ void Tools::Blinking(void* param) { //for testing purpouses
         //ESP_LOGI("Blinking counter", "%d", count);
         count++;
     }
+}
+
+//;
+void Tools::display_data_for_python(
+        const double& pitch, const double& yaw, const double& roll,
+        const double& ax,const double& ay, const double& az,
+        const double& temp, const double& pressure, const double& height) {
+    printf("*123*--For_Python--*456* PITCH:%.2f,YAW:%.2f,ROLL:%.2f,AX:%.2f,AY:%.2f,AZ:%.2f,TEMP:%.2f,PRESS:%.2f,HEIGHT:%.2f\n",
+       pitch, yaw, roll,
+       ax, ay, az,
+       temp, pressure, height);
+}
+
+void Tools::displayIMUData(const IMUData10Axis& data) {
+    printf("Accelerometer: ax=%.2f, ay=%.2f, az=%.2f\n", data.ax, data.ay, data.az);
+    printf("Gyroscope: gx=%.2f, gy=%.2f, gz=%.2f\n", data.gx, data.gy, data.gz);
+    printf("Magnetometer: mx=%.2f, my=%.2f, mz=%.2f\n", data.mx, data.my, data.mz);
+    printf("Pressure: %.2f hPa\n", data.pressure);
+    printf("Temperature: %.2f °C\n", data.temperature);
 }

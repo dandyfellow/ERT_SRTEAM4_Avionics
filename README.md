@@ -2,19 +2,36 @@
 ## Overview
 Coded in the ESP IDF framework, using C++. 
 The avionics system is designed to be modular, with a focus on sensor integration and data processing. The code is structured to allow for easy addition of new sensors and functionalities.
+
+### How to use
+Clone the project in the ESP-IDF directory.
+Have ESP-IDF intalled
+For displaying using the python script, you need pyton v3 or more.
+I am using a virtual environment for python (venv) -> install the library in the venv!!!
+
+**Library requirements:**
+```bash
+pip install pyserial
+pip install matplotlib
+pip install PyOpenGL PyOpenGL_accelerate pygame
+pip install pyopengl pygame
+
+
+```
+
 ## Components and libraries
 Mostly based of UncleRus's libraries
 ### MPU6500
 Uses the MPU6050 library. Slight change in adress from 6500 to 6050.
 
-### BMP280
+#### BMP280
 Nothing unusual
 
-### QMC5883L 
+#### QMC5883L 
 Class is called HMC5883L because that's what's written on my sensor. The QCM is basically a chinese copy with the same functionalities, but different adresses for ports and such. 
 Using the QMC5883L library from UncleRus.
 
-### Magwick Filter
+#### Magwick Filter
 The Magwick filter is a sensor fusion algorithm. There is an adjustable #define SAMPLE_FREQ in the main.cpp file
 
 ### Default configs by the UncleRes library 
@@ -24,10 +41,24 @@ The Magwick filter is a sensor fusion algorithm. There is an adjustable #define 
 * #define I2CDEV_DEFAULT_PORT  I2C_NUM_0
 * #define I2CDEV_DEFAULT_FREQ  100000
 
-### How to use
-Clone the project in the ESP-IDF directory.
+
 
 ### Remarks
 The QMC5883L on my side doesn't work at first. I need to first run it using the arduino QMC5883LCompass.h Library XYZ Example Sketch. 
 Learn more at [https://github.com/mprograms/QMC5883LCompass]    
 Then, I can run the code in this repository. Otherwise I just get 0 values for mx, my, mz.
+
+## To do list
+- Write altitude drop detection
+- Make accelerometer and height graphs
+- Write data to a file
+- Establish communication with 2 esp32's
+- 
+
+
+
+
+
+
+
+
