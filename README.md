@@ -12,6 +12,8 @@ I am using a virtual environment for python (venv) -> install the library in the
 Variables to be defined are the GPIO pins for SDA and SCL, they are in the sensor wrapper. 
 The sample frequency is defined in the main.cpp file.
 
+Chose whether you want the ground station or avioncs bay code by choosing the right #define in main.cpp
+
 **Library requirements:**
 ```bash
 pip install pyserial
@@ -58,11 +60,6 @@ Learn more at [https://github.com/mprograms/QMC5883LCompass]
 Then, I can run the code in this repository. Otherwise I just get 0 values for mx, my, mz.
 
 ## To do list
-- Write altitude drop detection
-- Make accelerometer and height graphs
-- Write data to a file
-- Establish communication with 2 esp32's
-- 
 
 
 
