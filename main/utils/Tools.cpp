@@ -46,3 +46,14 @@ void Tools::displayIMUData(const IMUData10Axis& data) {
     printf("Pressure: %.2f hPa\n", data.pressure);
     printf("Temperature: %.2f °C\n", data.temperature);
 }
+
+
+void Tools::deploy_main_parachute(void* param) {
+    #define MAIN_PARACHUTE_PIN GPIO_NUM_10 // set here
+
+    gpio_set_direction(MAIN_PARACHUTE_PIN, GPIO_MODE_OUTPUT);
+    gpio_set_level(MAIN_PARACHUTE_PIN, 1);
+    vTaskDelay(pdMS_TO_TICKS(5000)); // wait 5 seconds
+    gpio_set_level(MAIN_PARACHUTE_PIN, 0);
+
+}

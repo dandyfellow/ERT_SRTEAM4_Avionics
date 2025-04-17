@@ -27,6 +27,9 @@ public:
          */
     virtual bool read() = 0;
 
+    // averages the first 100 readings and stores it as bias
+    virtual void calibrate() = 0;
+
     // just tests the skeleton of the project (outputs "testing
     // bla bla bla" in the serial monitor)
     static void testing();

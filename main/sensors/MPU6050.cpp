@@ -24,6 +24,8 @@ MPU6050::MPU6050() {
     dev = {};
     accel.x = 0; accel.y = 0; accel.z = 0;
     rotation.x = 0; rotation.y = 0; rotation.z = 0;
+    bias_accel.x = 0; bias_accel.y = 0; bias_accel.z = 0;
+    bias_rotation.x = 0; bias_rotation.y = 0; bias_rotation.z = 0;
 }
 MPU6050::~MPU6050() {
     // destructor doesn't need to do much
@@ -46,7 +48,7 @@ bool MPU6050::init() {
             break;
         }
         ESP_LOGE(TAG, "MPU60x0 not found");
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        vTaskDelay(pdMS_TO_TICKS(500));
         init_count++;
     }
 
@@ -68,16 +70,61 @@ bool MPU6050::init() {
     MPU6050_ACCEL_RANGE_8,     //!< ± 8g
     MPU6050_ACCEL_RANGE_16,    //!< ± 16g
     */
+    ESP_LOGI(TAG, "Initialisation succes");
     ESP_LOGI(TAG, "Accel range: %d", dev.ranges.accel);
     ESP_LOGI(TAG, "Gyro range:  %d", dev.ranges.gyro);
-
     return true;
 }
 bool MPU6050::read() {
-    if(mpu6050_get_motion(&dev, &accel, &rotation) == ESP_OK) return true;
+    if(mpu6050_get_motion(&dev, &accel, &rotation) == ESP_OK) {
+        //adjust for bias
+        accel.x -= bias_accel.x; accel.y -= bias_accel.y; accel.z -= bias_accel.z;
+        rotation.x -= bias_rotation.x; rotation.y -= bias_rotation.y; rotation.z -= bias_rotation.z;
+
+
+        return true;
+    }
+    accel.x = 0; accel.y = 0; accel.z = 0;
+    rotation.x = 0; rotation.y = 0; rotation.z = 0;
     ESP_LOGE(TAG, "Could not read data");
     return false;
 }
+
+
+void MPU6050::calibrate() {
+    ESP_LOGI(TAG, "Calibrating MPU6500...Reading 100 samples");
+    unsigned int samples = 100;
+    mpu6050_acceleration_t sum_accel = {0, 0, 0};
+    mpu6050_rotation_t sum_rotation = {0, 0, 0};
+    for (unsigned int i = 0; i < samples; ++i) {
+        if (mpu6050_get_motion(&dev, &accel, &rotation) == ESP_OK) {
+            sum_accel.x += accel.x;
+            sum_accel.y += accel.y;
+            sum_accel.z += accel.z;
+
+            sum_rotation.x += rotation.x;
+            sum_rotation.y += rotation.y;
+            sum_rotation.z += rotation.z;
+        } else {
+            ESP_LOGE(TAG, "Could not read data for calibration");
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    bias_accel.x = sum_accel.x / samples;
+    bias_accel.y = sum_accel.y / samples;
+    bias_accel.z = sum_accel.z / samples - 1;// -1 to account for gravity (1g)
+
+    bias_rotation.x = sum_rotation.x / samples;
+    bias_rotation.y = sum_rotation.y / samples;
+    bias_rotation.z = sum_rotation.z / samples;
+
+    ESP_LOGI(TAG, "MPU6050 calibration done: bias_accel: x=%.4f y=%.4f z=%.4f | bias_rotation: x=%.4f y=%.4f z=%.4f",
+             bias_accel.x, bias_accel.y, bias_accel.z,
+             bias_rotation.x, bias_rotation.y, bias_rotation.z);
+}
+
+
+
 void MPU6050::display() {
     ESP_LOGI(TAG, "Acceleration: x=%.4f   y=%.4f   z=%.4f", accel.x, accel.y, accel.z);
     ESP_LOGI(TAG, "Gyroscope:    x=%.4f   y=%.4f   z=%.4f", rotation.x, rotation.y, rotation.z);

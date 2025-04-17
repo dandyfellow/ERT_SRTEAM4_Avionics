@@ -9,6 +9,9 @@ Have ESP-IDF intalled
 For displaying using the python script, you need pyton v3 or more.
 I am using a virtual environment for python (venv) -> install the library in the venv!!!
 
+Variables to be defined are the GPIO pins for SDA and SCL, they are in the sensor wrapper. 
+The sample frequency is defined in the main.cpp file.
+
 **Library requirements:**
 ```bash
 pip install pyserial
@@ -21,6 +24,8 @@ pip install pyopengl pygame
 
 ## Components and libraries
 Mostly based of UncleRus's libraries
+Madgwick filter : https://github.com/arduino-libraries/MadgwickAHRS.git
+Displaying in OpenGL cube : https://github.com/mattzzw/Arduino-mpu6050.git
 ### MPU6500
 Uses the MPU6050 library. Slight change in adress from 6500 to 6050.
 
@@ -31,8 +36,12 @@ Nothing unusual
 Class is called HMC5883L because that's what's written on my sensor. The QCM is basically a chinese copy with the same functionalities, but different adresses for ports and such. 
 Using the QMC5883L library from UncleRus.
 
-#### Magwick Filter
+#### Magwick Filter and calibration
 The Magwick filter is a sensor fusion algorithm. There is an adjustable #define SAMPLE_FREQ in the main.cpp file
+
+Calibration done on the bmp280 for initial altitude and temperature, biais removal for the accelerometer and gyroscope.
+
+The magnetomter is **NOT** calibrated. The math is pretty complexe. Check https://ww2.mathworks.cn/help/fusion/ug/magnetometer-calibration.html
 
 ### Default configs by the UncleRes library 
 * i2cdev_init() is a wrapper by the UncleRes library with these settings for the i2c protocol

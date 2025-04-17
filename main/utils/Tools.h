@@ -26,6 +26,8 @@ public:
         const double& ax,const double& ay, const double& az,
         const double& temp, const double& pressure, const double& height);
 
+    static void deploy_main_parachute(void* param);
+
 
 private:
 

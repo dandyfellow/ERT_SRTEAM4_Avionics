@@ -30,6 +30,7 @@ bool HMC5883L::init() {
 
     // 50Hz data rate, 128 samples, -2G..+2G range
     ESP_ERROR_CHECK(qmc5883l_set_config(&dev, QMC5883L_DR_50, QMC5883L_OSR_128, QMC5883L_RNG_2));
+    ESP_LOGI(TAG, "Initialisation succes");
     return true;
 }
 
@@ -37,6 +38,7 @@ bool HMC5883L::init() {
 bool HMC5883L::read() {
     if (qmc5883l_get_data(&dev, &data) == ESP_OK){return true;}
     ESP_LOGE(TAG, "Could not read QMC5883L data");
+    data.x = 0; data.y = 0; data.z = 0;
     return false;
 }
 void HMC5883L::display() {
@@ -46,4 +48,8 @@ void HMC5883L::display() {
 
 void HMC5883L::testing() {
     ESP_LOGI("MPU6050", "Testing MPU6050");
+}
+
+void HMC5883L::calibrate() {
+    ESP_LOGI(TAG, "Calibrating QMC5883L...Doesn't do anything, just a placeholder. The math sucks and I don't want to deal with it");
 }

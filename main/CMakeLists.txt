@@ -8,12 +8,16 @@ idf_component_register(
             "utils/I2CManager.cpp"
             "sensors/HMC5883L.cpp"
             "utils/Tools.cpp"
+            "ESP_NOW/master_avionics.cpp"
+            "ESP_NOW/ground_station.cpp"
+            "ESP_NOW/esp_now_superclass.cpp"
 
         INCLUDE_DIRS
             "."
             "sensors"
             "filters"
             "utils"
+            "ESP_NOW"
 
 
         REQUIRES
@@ -21,10 +25,11 @@ idf_component_register(
             freertos
             esp_idf_lib_helpers
             i2cdev
-            log
             bmp280
             mpu6050
             qmc5883l
             esp_timer
             QMC5883LArduino
+            esp_wifi esp_event nvs_flash
+
 )
