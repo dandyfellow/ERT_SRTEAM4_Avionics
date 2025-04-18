@@ -20,6 +20,8 @@ pip install pyserial
 pip install matplotlib
 pip install PyOpenGL PyOpenGL_accelerate pygame
 pip install pyopengl pygame
+pip install pandas matplotlib 
+
 
 
 ```

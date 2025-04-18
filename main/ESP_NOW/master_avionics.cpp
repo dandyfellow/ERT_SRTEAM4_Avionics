@@ -10,56 +10,13 @@
 
 
 static const char* TAG = "ESP-NOW-MASTER";
-/*
-void on_send_cb(const uint8_t* mac_addr, esp_now_send_status_t status) {
-    ESP_LOGI("SEND", "Send to " MACSTR " %s", MAC2STR(mac_addr),
-             status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
-}
-*/
-/*
-extern "C" void app_main() {
-
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    // WIFI
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE));
-
-
-
-    //esp_wifi_set_protocol(WIFI_IF_STA, WIFI_PROTOCOL_LR); added for LR
-    ESP_ERROR_CHECK(esp_now_init());
-
-
-    esp_now_peer_info_t peerInfo = {};
-    memcpy(peerInfo.peer_addr, mac_addrSLAVE, ESP_NOW_ETH_ALEN);
-    peerInfo.channel = WIFI_CHANNEL;
-    peerInfo.ifidx = WIFI_IF_STA;
-    peerInfo.encrypt = false;
-    ESP_ERROR_CHECK(esp_now_add_peer(&peerInfo));
-
-
-
-    while (true) {
-        char msg[32];
-        snprintf(msg, sizeof(msg), "Msg #%d", message_counter++);
-        esp_now_send(mac_addrSLAVE, (uint8_t*)msg, strlen(msg));
-        esp_now_register_send_cb(on_send_cb);
-        vTaskDelay(pdMS_TO_TICKS(2000));
-    }
-
-}
-*/
 
 esp_now_peer_info_t Master_avionics::peerInfo;
+unsigned int Master_avionics::packet_number;
 
 Master_avionics::Master_avionics() {
     init_peer_info();
+    packet_number = 1;
 }
 
 esp_err_t Master_avionics::init_peer_info() {
@@ -74,7 +31,7 @@ esp_err_t Master_avionics::init_peer_info() {
 }
 
 esp_err_t Master_avionics::send_packet() {
-    printf("Packet #%d",  telemetry_packet.counter++);
+    //printf("Packet #%d \n",  telemetry_packet.counter++);
     return esp_now_send(mac_addrSLAVE, (uint8_t*)&telemetry_packet, sizeof(telemetry_packet));
 }
 
@@ -82,16 +39,21 @@ esp_err_t Master_avionics::send_packet() {
 
 
 void Master_avionics::on_send_cb(const uint8_t* mac_addr, esp_now_send_status_t status) {
-    ESP_LOGI("SEND", "Send to " MACSTR " %s", MAC2STR(mac_addr),
-             status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+    //ESP_LOGI("SEND", "Send to " MACSTR " %s", MAC2STR(mac_addr), status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
 }
 
 
-void Master_avionics::my_data_populate(float pitch, float yaw, float roll,
-                                       float ax, float ay, float az,
-                                       float temperature, float pressure, float altitude) {
+void Master_avionics::my_data_populate(const float& pitch, const float& yaw, const float& roll,
+    const float& ax, const float& ay, const float& az,
+    const float& temperature, const float& pressure, const float& altitude,
+    const float& max_altitude, const bool& max_altitude_reached,
+    const bool& deploy_main_para_parachute) {
+
     //ESP_LOGI(TAG, "Populating TelemetryPacket");
+    Master_avionics::packet_number++;
+
     telemetry_packet.id = MSG_TELEMETRY;
+    telemetry_packet.packet_num = packet_number;
     telemetry_packet.pitch = pitch;
     telemetry_packet.yaw = yaw;
     telemetry_packet.roll = roll;
@@ -101,4 +63,23 @@ void Master_avionics::my_data_populate(float pitch, float yaw, float roll,
     telemetry_packet.temperature = temperature;
     telemetry_packet.pressure = pressure;
     telemetry_packet.altitude = altitude;
+    telemetry_packet.max_altitude = max_altitude;
+    telemetry_packet.max_altitude_reached = max_altitude_reached;
+    telemetry_packet.deploy_main_para_parachute = deploy_main_para_parachute;
 }
+
+void Master_avionics::display_data_for_python() {
+    printf("*123*--For_Python--*456* "
+           "ID:%d,PACKET:%u,PITCH:%.2f,YAW:%.2f,ROLL:%.2f,"
+           "AX:%.2f,AY:%.2f,AZ:%.2f,"
+           "TEMP:%.2f,PRESS:%.2f,ALT:%.2f,"
+           "MAX_ALT:%.2f,MAX_ALT_REACHED:%d,DEPLOYED:%d\n",
+           telemetry_packet.id, telemetry_packet.packet_num,
+           telemetry_packet.pitch, telemetry_packet.yaw, telemetry_packet.roll,
+           telemetry_packet.ax, telemetry_packet.ay, telemetry_packet.az,
+           telemetry_packet.temperature, telemetry_packet.pressure, telemetry_packet.altitude,
+           telemetry_packet.max_altitude,
+           static_cast<int>(telemetry_packet.max_altitude_reached),
+           static_cast<int>(telemetry_packet.deploy_main_para_parachute));
+}
+

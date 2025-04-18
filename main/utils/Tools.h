@@ -5,6 +5,7 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 #include <cstdio>
+#include "esp_now_superclass.h"
 
 struct IMUData10Axis {
     float ax = 0, ay = 0, az = 0; // Accelerometer data [g]
@@ -21,13 +22,8 @@ class Tools {
 public:
     static void Blinking(void* param);
     static void displayIMUData(const IMUData10Axis& data);
-    static void display_data_for_python(
-        const double& pitch, const double& yaw, const double& roll,
-        const double& ax,const double& ay, const double& az,
-        const double& temp, const double& pressure, const double& height);
 
     static void deploy_main_parachute(void* param);
-
 
 private:
 

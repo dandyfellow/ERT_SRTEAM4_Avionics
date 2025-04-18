@@ -22,7 +22,7 @@ TelemetryPacket Esp_now_superclass::telemetry_packet;
 
 Esp_now_superclass::Esp_now_superclass() {
     cfg = WIFI_INIT_CONFIG_DEFAULT();
-    telemetry_packet.counter = 0;
+    telemetry_packet.packet_num = 1;
     telemetry_packet = {};
     Esp_now_superclass::init_wifi();
 }
@@ -61,7 +61,7 @@ esp_err_t Esp_now_superclass::init_wifi(){
 void Esp_now_superclass::print_telemetry(const TelemetryPacket& packet) {
     ESP_LOGI("TELEMETRY", "-----------------------------");
     ESP_LOGI("TELEMETRY", "ID: %d", packet.id);
-    ESP_LOGI("TELEMETRY", "Counter: %d", packet.counter);
+    ESP_LOGI("TELEMETRY", "Counter: %d", packet.packet_num);
     ESP_LOGI("TELEMETRY", "Pitch: %.2f", packet.pitch);
     ESP_LOGI("TELEMETRY", "Yaw: %.2f", packet.yaw);
     ESP_LOGI("TELEMETRY", "Roll: %.2f", packet.roll);

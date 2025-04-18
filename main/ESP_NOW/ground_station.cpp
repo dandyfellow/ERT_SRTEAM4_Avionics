@@ -53,6 +53,7 @@ void Ground_station::on_receive_cb(const esp_now_recv_info_t* info, const uint8_
 
     ESP_LOGI("ESP-NOW-RECV", "Received Telemetry from %s", mac_str);
     //print_telemetry(telemetry_packet);
+
 }
 
 

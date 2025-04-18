@@ -3,6 +3,7 @@
 //
 
 #include "Tools.h"
+#include "esp_now_superclass.h"
 
 extern "C" {
 #include "freertos/FreeRTOS.h"
@@ -19,25 +20,18 @@ void Tools::Blinking(void* param) { //for testing purpouses
     unsigned int count = 0;
     gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
 
-    while(true) {
+    while(count < 100) {
         led_on = !led_on;
         gpio_set_level(LED_PIN, led_on);
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(100));
         //ESP_LOGI("Blinking counter", "%d", count);
         count++;
     }
 }
 
 //;
-void Tools::display_data_for_python(
-        const double& pitch, const double& yaw, const double& roll,
-        const double& ax,const double& ay, const double& az,
-        const double& temp, const double& pressure, const double& height) {
-    printf("*123*--For_Python--*456* PITCH:%.2f,YAW:%.2f,ROLL:%.2f,AX:%.2f,AY:%.2f,AZ:%.2f,TEMP:%.2f,PRESS:%.2f,HEIGHT:%.2f\n",
-       pitch, yaw, roll,
-       ax, ay, az,
-       temp, pressure, height);
-}
+
+
 
 void Tools::displayIMUData(const IMUData10Axis& data) {
     printf("Accelerometer: ax=%.2f, ay=%.2f, az=%.2f\n", data.ax, data.ay, data.az);

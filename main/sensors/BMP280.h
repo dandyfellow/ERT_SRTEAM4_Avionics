@@ -25,7 +25,7 @@ public:
     void display() override;
     void calibrate() override; // calulates the initial data for the first 100 readings
 
-
+    static void deployement_sequence(bool deploy_main_para_parachute, bool deployed);
     static void testing();
 
     float get_temperature() const {return temperature;}
@@ -38,6 +38,7 @@ public:
     float get_starting_temperature() const {return starting_temperature;}
 
     bool get_deploy_main_para_parachute() const {return deploy_main_para_parachute;}
+    bool get_max_altitude_reached() const {return max_altitude_reached;}
 
 
 
@@ -56,6 +57,7 @@ private:
     bool max_altitude_reached = false;
 
     bool deploy_main_para_parachute = false;
+    bool deployed = false;
 
 };
 

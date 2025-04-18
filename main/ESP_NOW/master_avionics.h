@@ -13,15 +13,20 @@ public:
     Master_avionics();
 
     static esp_err_t send_packet();
-    static void my_data_populate(float pitch, float yaw, float roll,
-                          float ax, float ay, float az,
-                          float temperature, float pressure, float altitude);
+    static void my_data_populate(const float& pitch, const float& yaw, const float& roll,
+        const float& ax, const float& ay, const float& az,
+        const float& temperature, const float& pressure, const float& altitude,
+        const float& max_altitude, const bool& max_altitude_reached,
+        const bool& deploy_main_para_parachute);
+
+    static void display_data_for_python();
 
 private:
     static esp_now_peer_info_t peerInfo;
 
     static esp_err_t init_peer_info();
     static void on_send_cb(const uint8_t* mac_addr, esp_now_send_status_t status);
+    static unsigned int packet_number;
 };
 
 

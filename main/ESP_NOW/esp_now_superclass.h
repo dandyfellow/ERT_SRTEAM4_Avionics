@@ -34,7 +34,7 @@ enum MessageType {
 
 typedef struct __attribute__((packed)) { // __attribute__((packed)) no padding between fields
     uint8_t id; //1 byte
-    int8_t counter;  //1 byte
+    unsigned int packet_num;  //4 byte
     float pitch;  //4 byte
     float yaw;  //4 byte
     float roll;  //4 byte
@@ -44,8 +44,16 @@ typedef struct __attribute__((packed)) { // __attribute__((packed)) no padding b
     float temperature;  //4 byte
     float pressure;  //4 byte
     float altitude;  //4 byte
+    float max_altitude; //4 byte
+    bool max_altitude_reached; //1 byte
+    bool deploy_main_para_parachute; //1 byte
+} TelemetryPacket; //total bytes = 49 bytes
 
-} TelemetryPacket; //total bytes = 40 bytes
+typedef struct __attribute__((packed)) {
+    bool init_sequence; //1 byte
+    float starting_alitude; //4 bytes
+} InitTelemetryPacket;
+
 
 class Esp_now_superclass {
 public:
@@ -53,7 +61,7 @@ public:
     static esp_err_t readMacAddress(uint8_t baseMac[6]);
     static esp_err_t init_wifi();
     static void print_telemetry(const TelemetryPacket& packet);
-    static unsigned int get_message_counter() {return  telemetry_packet.counter;}
+    static unsigned int get_packet_number() {return  telemetry_packet.packet_num;}
 
 protected:
     static wifi_init_config_t cfg;
