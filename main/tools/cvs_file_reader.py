@@ -28,9 +28,10 @@ def plot_telemetry(df):
     fig.suptitle("Flight Telemetry")
 
     # Orientation
-    axs[0].plot(time, df["pitch"], label="Pitch")
-    axs[0].plot(time, df["yaw"], label="Yaw")
-    axs[0].plot(time, df["roll"], label="Roll")
+    axs[0].plot(time, df["roll"], label="Roll [x]")
+    axs[0].plot(time, df["pitch"], label="Pitch [y]")
+    axs[0].plot(time, df["yaw"], label="Yaw [z]")
+
     axs[0].set_ylabel("Degrees")
     axs[0].legend()
     axs[0].grid(True)

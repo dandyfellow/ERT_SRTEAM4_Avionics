@@ -14,17 +14,21 @@
 #include "nvs_flash.h"
 #include <esp_mac.h>
 
+static const char* TAG = "ESP-NOW-Superclass";
 
 
 wifi_init_config_t Esp_now_superclass::cfg;
 TelemetryPacket Esp_now_superclass::telemetry_packet;
+esp_now_peer_info_t Esp_now_superclass::peerInfo;
+Ground_to_avionics_data Esp_now_superclass::ground_to_avionics_data = {};
 
 
 Esp_now_superclass::Esp_now_superclass() {
     cfg = WIFI_INIT_CONFIG_DEFAULT();
-    telemetry_packet.packet_num = 1;
     telemetry_packet = {};
-    Esp_now_superclass::init_wifi();
+    telemetry_packet.packet_num = 1;
+    if(init_wifi() != ESP_OK) ESP_LOGE(TAG, "ESP-NOW Init Failed");;
+
 }
 
 
@@ -74,8 +78,43 @@ void Esp_now_superclass::print_telemetry(const TelemetryPacket& packet) {
     ESP_LOGI("TELEMETRY", "-----------------------------");
 }
 
+esp_err_t Esp_now_superclass::init_peer_info(ESP_NOW_DEVICE device) {
+    if(device == ESP_MASTER_AVIONICS) memcpy(peerInfo.peer_addr, mac_addrSLAVE, ESP_NOW_ETH_ALEN);
+    else if(device == ESP_SLAVE_GROUND_STATION) memcpy(peerInfo.peer_addr, mac_addrMASTER, ESP_NOW_ETH_ALEN);
+    //device A talks to B, so it A inits to B and B inits to A
+    peerInfo.channel = WIFI_CHANNEL;
+    peerInfo.ifidx = WIFI_IF_STA;
+    peerInfo.encrypt = false;
+    if(esp_now_add_peer(&peerInfo) != ESP_OK) {
+        ESP_LOGE(TAG, "Peer init failed");
+        return ESP_FAIL;
+    }
+    ESP_LOGI(TAG, "Peer init success");
+    //esp_now_register_send_cb(on_send_cb);
+    return ESP_OK;
+}
+
+void Esp_now_superclass::on_send_cb(const uint8_t* mac_addr, esp_now_send_status_t status) {
+    ESP_LOGI(TAG, "Send to " MACSTR " %s", MAC2STR(mac_addr), status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+}
 
 
+void Esp_now_superclass::display_data_for_python() {
+    printf("*123*--For_Python--*456* "
+           "ID:%d,PACKET:%u,PITCH:%.2f,YAW:%.2f,ROLL:%.2f,"
+           "AX:%.2f,AY:%.2f,AZ:%.2f,"
+           "TEMP:%.2f,PRESS:%.2f,ALT:%.2f,"
+           "MAX_ALT:%.2f,MAX_ALT_REACHED:%d,DEPLOYED:%d,START_ALT:%.2f\n",
+           telemetry_packet.id, telemetry_packet.packet_num,
+           telemetry_packet.pitch, telemetry_packet.yaw, telemetry_packet.roll,
+           telemetry_packet.ax, telemetry_packet.ay, telemetry_packet.az,
+           telemetry_packet.temperature, telemetry_packet.pressure, telemetry_packet.altitude,
+           telemetry_packet.max_altitude,
+           static_cast<int>(telemetry_packet.max_altitude_reached),
+           static_cast<int>(telemetry_packet.deploy_main_para_parachute),
+           telemetry_packet.starting_altitude);
+}
 
 
+// Init ESP-NOW
 

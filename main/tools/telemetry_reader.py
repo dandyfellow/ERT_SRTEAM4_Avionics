@@ -9,6 +9,7 @@ import serial
 import csv
 from datetime import datetime
 import os
+import time
 
 
 log_file = open("flight_log.csv", mode="w", newline="")
@@ -106,17 +107,25 @@ def draw_box():
 # Global variables
 pitch = yaw = roll = 0.0
 ax = ay = az = 0.0
-temp = altitude = pressure = max_altitude = 0.0
+temp = altitude = pressure = max_altitude = starting_altitude = 0.0
 packet_num = 1
 id = 0
 max_altitude_reached = deploy_main_para_parachute = False
 
-number_packet_received = 0
+packet_num_before = 0
+number_packet_failed = 0
+system_armed = False
+packet_failed = False
+
 def parse_serial():
     global pitch, yaw, roll, ax, ay, az, temp, pressure, altitude
     global max_altitude, max_altitude_reached, deploy_main_para_parachute
     global packet_num, id
-    global number_packet_received
+    global packet_num_before
+    global number_packet_failed
+    global system_armed
+    global packet_failed
+    global starting_altitude
 
     try:
         line = ser.readline().decode('utf-8').strip()
@@ -133,10 +142,13 @@ def parse_serial():
                         key, value = item.split(':')
                         data[key.strip()] = float(value.strip())
 
-                number_packet_received += 1
+
                 # Parse all fields
                 id = int(data.get("ID", 0))
                 packet_num = int(data.get("PACKET", 0))
+
+                #print(f"packet_num {packet_num} | packets failed {number_packet_failed}")
+
                 pitch = data.get("PITCH", 0.0)
                 yaw = data.get("YAW", 0.0)
                 roll = data.get("ROLL", 0.0)
@@ -147,8 +159,22 @@ def parse_serial():
                 pressure = data.get("PRESS", 0.0)
                 altitude = data.get("ALT", 0.0)
                 max_altitude = data.get("MAX_ALT", 0.0)
+                starting_altitude = data.get("START_ALT", 0.0)
                 max_altitude_reached = bool(int(data.get("MAX_ALT_REACHED", 0)))
                 deploy_main_para_parachute = bool(int(data.get("DEPLOYED", 0)))
+
+                #print(f"System armed: {system_armed} packet_before={packet_num_before} | packet_now={packet_num}")
+
+                if(system_armed == True and packet_num_before == packet_num) :
+                    number_packet_failed += 1
+                    packet_failed = True
+
+                if(packet_num <= 5):
+                    number_packet_failed = 0
+                    packet_failed = False
+
+                packet_num_before = packet_num
+
         else:
             print(line)
     except Exception as e:
@@ -166,9 +192,9 @@ def draw():
 
     draw_box()
 
-def draw_text(x, y, text_string):
+def draw_text(x, y, text_string, color=(255, 255, 255)):
     font = pygame.font.SysFont("Courier", 18, True)
-    text_surface = font.render(text_string, True, (255, 255, 255), (0, 0, 0))
+    text_surface = font.render(text_string, True, color, (0, 0, 0))
     text_data = pygame.image.tostring(text_surface, "RGBA", True)
 
     glWindowPos2d(x, y)
@@ -177,10 +203,14 @@ def draw_text(x, y, text_string):
 
 
 def main():
-    width = 1450
-    height = 825
+    global number_packet_failed
+    global system_armed
+    global packet_failed
+    width = 1200
+    height = 600
+    #width = 1450
+    #height = 825
     spacing = 25
-    global number_packet_received
 
     pygame.init()
     screen = pygame.display.set_mode((width, height), DOUBLEBUF | OPENGL)
@@ -194,8 +224,15 @@ def main():
 
     running = True
     while running:
+        packet_failed = False
+
+        #print(f"System armed: {system_armed}") #debug
+
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                if(system_armed == True) :
+                    print("[→] Turning system off")
+                    ser.write(b"START\n")
                 running = False
 
             # KEYDOWN BLOCK START
@@ -203,10 +240,17 @@ def main():
                 if event.key == K_s:
                     print("[→] Sending START to ESP32")
                     ser.write(b"START\n")
-                    number_packet_received = 0
+                    system_armed = (not system_armed)
+                    if(system_armed == True):
+                        number_packet_failed = 0
+                elif event.key == K_r:
+                    print("[→] Switches the system_armed boolean")
+                    system_armed = (not system_armed)
+
+
+
+
             # KEYDOWN BLOCK END
-
-
 
         parse_serial()
         draw()
@@ -219,19 +263,57 @@ def main():
         ])
 
 
+        col_spacing = 150
+        row_spacing = 25
+        right_x = width - col_spacing  # shift left from right edge
+        top_y = height - row_spacing
+
+
+        draw_text(right_x - 3 * col_spacing, top_y - row_spacing - 15, f"-----------------------------------------------------------")
+        if(max_altitude_reached == True):
+            draw_text(right_x - 1 * col_spacing-15, top_y,"Max Alt Reached!",   color=(255, 0, 0))
+            draw_text(right_x - 1 * col_spacing, top_y - row_spacing, f"{max_altitude:.2f}",     color=(255, 0, 0))
+        else:
+            draw_text(right_x - 1 * col_spacing, top_y,     "Max Alt",   color=(200, 200, 200))
+            draw_text(right_x - 1 * col_spacing, top_y - row_spacing, f"{max_altitude:.2f}",     color=(255, 255, 255))
+
+    # === Header Row ===
+        draw_text(right_x - 0 * col_spacing, top_y,     "Start Alt", color=(200, 200, 200))
+
+        draw_text(right_x - 2 * col_spacing, top_y,     "Alt",       color=(200, 200, 200))
+        draw_text(right_x - 3 * col_spacing, top_y,     "Alt Δ",     color=(200, 200, 200))
+
+        # === Value Row ===
+        draw_text(right_x - 0 * col_spacing, top_y - row_spacing, f"{starting_altitude:.2f}", color=(255, 255, 255))
+        draw_text(right_x - 2 * col_spacing, top_y - row_spacing, f"{altitude:.2f}",         color=(255, 255, 255))
+        draw_text(right_x - 3 * col_spacing, top_y - row_spacing, f"{altitude-starting_altitude:.2f}",    color=(255, 255, 255))
+
         # Display telemetry data
         draw_text(10, height - 1 * spacing, f"PITCH:{pitch:6.2f}   | YAW:  {yaw     :6.2f}   | ROLL: {roll:6.2f}")
         draw_text(10, height - 2 * spacing, f"AX:   {ax   :6.2f}g  | AY:   {ay      :6.2f}g  | AZ: {az:6.2f}g")
-        draw_text(10, height - 3 * spacing, f"TEMP: {temp :6.2f}°C | ALT.: {altitude:6.2f}m")
-        draw_text(width / 2, height - spacing, f"Max alt.: {max_altitude:6.2f}m   Reached: {max_altitude_reached}")
-        draw_text(width / 2, height - 2 * spacing, f"Starting alt.: not yet")
-        if packet_num > 0:
-            draw_text(width / 2, height - 3 * spacing, f"% packets received: {(number_packet_received+1) / packet_num * 100:6.2f}%")
-        draw_text(width / 2, height - 4 * spacing, f"Main parachute deployed: {deploy_main_para_parachute}")
+        draw_text(10, height - 3 * spacing, f"TEMP: {temp :6.2f}°C")
+
+        draw_text(width / 2, height - 3 * spacing, f"% packets received:{((packet_num - number_packet_failed) / packet_num) * 100:4.2f}%",)
+
+        if(packet_failed == False):
+            draw_text(width / 2 + 300, height - 3 * spacing, f"Receiving (fail:{number_packet_failed})", (128, 255, 0))
+        else :
+            draw_text(width / 2 + 300, height - 3 * spacing, f"   Fail!  (fail:{number_packet_failed})", (255, 0, 0))
+
+        if(deploy_main_para_parachute == True):
+            draw_text(10,  10, f"Main parachute deployed: {deploy_main_para_parachute}", color=(0,255,0))
+        else :
+            draw_text(10,  10, f"Main parachute deployed: {deploy_main_para_parachute}")
+
+        if(system_armed == True):
+            draw_text(10,  10+spacing, f"SYSTEM ARMED", color=(0,255,0))
+        else:
+            draw_text(10,  10+spacing, f"SYSTEM UNARMED", color=(180, 180, 180))
 
         pygame.display.flip()
         clock.tick(60)
 
+    time.sleep(1)
     pygame.quit()
     ser.close()
     log_file.close()

@@ -28,14 +28,13 @@ static const char *TAG = "Main"; // tag for logging
 /*1000Hz = 1ms 750Hz = 1.33ms 500Hz = 2ms 250Hz = 4ms 200Hz = 5ms 150Hz = 6.67ms 100Hz = 10ms
  *50Hz = 20m 25Hz = 40ms 20Hz = 50ms 13.33Hz = 75ms 10Hz = 100ms -> too low 5Hz = 200ms 2Hz = 500ms 1Hz = 1000ms */
 
-#define MODE_AVIONICS // CHOSE ONE
-//#define MODE_GROUND_STATION
-#define MODE_SINGLE_ESP
+    //#define MODE_AVIONICS // CHOSE ONE
+    #define MODE_GROUND_STATION
+    //#define MODE_SINGLE_ESP
 
 //=================================================================================================================================0
 
 bool system_armed = false;
-bool system_restart = false;
 
 void wait_for_uart_command(void* param) {
     char input[64];
@@ -47,13 +46,7 @@ void wait_for_uart_command(void* param) {
 
             if (strstr(input, "START")) {
                 system_armed = !system_armed;
-                printf("System_armed : %%!\n");
-            } else if (strstr(input, "RESET")) {
-                system_restart = true;
-                printf("Restart command received.\n");
-            } else if (strstr(input, "STOP")) {
-                system_armed = false;
-                printf("System disarmed.\n");
+                printf("System_armed : %s\n", system_armed ? "true" : "false");
             }
         }
         vTaskDelay(pdMS_TO_TICKS(100));  // CPU-friendly delay
@@ -64,9 +57,14 @@ void wait_for_uart_command(void* param) {
 #ifdef MODE_AVIONICS
 extern "C" void app_main(void) {
     ESP_ERROR_CHECK(i2cdev_init()); //-> check read me for default values for the i2c bus
+#ifdef MODE_SINGLE_ESP
     xTaskCreate(wait_for_uart_command, "wait_for_uart_command", 4096, NULL, 5, NULL);
+#endif
 
+    Master_avionics avionics; //calls the constructor
     while(true) {
+        system_armed = Master_avionics::get_ground_data().start;
+        Master_avionics::set_packet_number(1);
         if(system_armed){
             // Initializing Madgwick filter
             MadgwickAHRS madgwick;
@@ -80,13 +78,12 @@ extern "C" void app_main(void) {
 
             bmp.calibrate(); mpu.calibrate(); hmc.calibrate();
 
-            Master_avionics avionics; //calls the constructor
-
             // dynamically measure the sample frequency -> dt
             int64_t last_time = esp_timer_get_time();
             float dt = 0.0f;
 
             while(system_armed) {
+                system_armed = Master_avionics::get_ground_data().start;
                 //timer
                 if(SAMPLE_FREQ == 0) {
                     int64_t now = esp_timer_get_time();
@@ -118,7 +115,7 @@ extern "C" void app_main(void) {
                 Master_avionics::my_data_populate(madgwick.getPitchRadians(), madgwick.getYawRadians(), madgwick.getRollRadians(),
                                                   data.ax, data.ay, data.az,
                                                   data.temperature, data.pressure, bmp.get_altitude(), bmp.get_max_altitude(),
-                                                  bmp.get_max_altitude_reached(), bmp.get_deploy_main_para_parachute()
+                                                  bmp.get_max_altitude_reached(), bmp.get_deploy_main_para_parachute(), bmp.get_starting_altitude()
                 );
                 Master_avionics::send_packet();
 #ifdef MODE_SINGLE_ESP
@@ -140,22 +137,20 @@ extern "C" void app_main(void) {
 
 #ifdef MODE_GROUND_STATION
 extern "C" void app_main(void) {
-    ESP_ERROR_CHECK(i2cdev_init()); //-> check read me for default values for the i2c bus
     xTaskCreate(wait_for_uart_command, "wait_for_uart_command", 4096, NULL, 5, NULL);
+    Ground_station ground_station; //for constructor
 
     while(true) {
-        if(system_armed){
-            Ground_station ground_station;
-            while(system_armed) {
-                TelemetryPacket telemetry = Ground_station::get_telemetry();
-                Master_avionics::display_data_for_python();
+        Esp_now_superclass::display_data_for_python();
+        Ground_station::my_data_populate(system_armed);
+        if(Ground_station::send_packet() != ESP_OK) ESP_LOGE(TAG, "Failed to send packet from ground station to avionics");
 
-                if(SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000./SAMPLE_FREQ));
-                if(SAMPLE_FREQ == 0) vTaskDelay(pdMS_TO_TICKS(1)); // Keep cpu breathing
-            }
-            system_armed = false;
-        }
-        vTaskDelay(pdMS_TO_TICKS(1000));
+
+
+        if(SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000./SAMPLE_FREQ));
+        if(SAMPLE_FREQ == 0) vTaskDelay(pdMS_TO_TICKS(1)); // Keep cpu breathing
+
+
     }
 }
 #endif

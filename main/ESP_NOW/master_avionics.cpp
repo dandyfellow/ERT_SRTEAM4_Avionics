@@ -3,51 +3,32 @@
 //
 
 #include "master_avionics.h"
-#include "esp_now_configuration.h"
 #include "esp_now_superclass.h"
 
-// MASTER CODE
+// MASTER CODE / AVIONICS
 
 
-static const char* TAG = "ESP-NOW-MASTER";
+static const char* TAG = "AVIONICS";
 
-esp_now_peer_info_t Master_avionics::peerInfo;
+
 unsigned int Master_avionics::packet_number;
 
 Master_avionics::Master_avionics() {
-    init_peer_info();
     packet_number = 1;
-}
-
-esp_err_t Master_avionics::init_peer_info() {
-    memcpy(peerInfo.peer_addr, mac_addrSLAVE, ESP_NOW_ETH_ALEN);
-    peerInfo.channel = WIFI_CHANNEL;
-    peerInfo.ifidx = WIFI_IF_STA;
-    peerInfo.encrypt = false;
-    if(esp_now_add_peer(&peerInfo) != ESP_OK) {return ESP_FAIL; ESP_LOGE(TAG, "Peer init failed");}
-    ESP_LOGI(TAG, "Peer init success");
-    esp_now_register_send_cb(Master_avionics::on_send_cb);
-    return ESP_OK;
+    init_peer_info(ESP_MASTER_AVIONICS);
+    init_esp_now_callback();
 }
 
 esp_err_t Master_avionics::send_packet() {
     //printf("Packet #%d \n",  telemetry_packet.counter++);
-    return esp_now_send(mac_addrSLAVE, (uint8_t*)&telemetry_packet, sizeof(telemetry_packet));
+    return esp_now_send(mac_addrSLAVE, reinterpret_cast<uint8_t *>(&telemetry_packet), sizeof(telemetry_packet));
 }
-
-
-
-
-void Master_avionics::on_send_cb(const uint8_t* mac_addr, esp_now_send_status_t status) {
-    //ESP_LOGI("SEND", "Send to " MACSTR " %s", MAC2STR(mac_addr), status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
-}
-
 
 void Master_avionics::my_data_populate(const float& pitch, const float& yaw, const float& roll,
     const float& ax, const float& ay, const float& az,
     const float& temperature, const float& pressure, const float& altitude,
     const float& max_altitude, const bool& max_altitude_reached,
-    const bool& deploy_main_para_parachute) {
+    const bool& deploy_main_para_parachute, const float& starting_altitude) {
 
     //ESP_LOGI(TAG, "Populating TelemetryPacket");
     Master_avionics::packet_number++;
@@ -66,20 +47,26 @@ void Master_avionics::my_data_populate(const float& pitch, const float& yaw, con
     telemetry_packet.max_altitude = max_altitude;
     telemetry_packet.max_altitude_reached = max_altitude_reached;
     telemetry_packet.deploy_main_para_parachute = deploy_main_para_parachute;
+    telemetry_packet.starting_altitude = starting_altitude;
 }
 
-void Master_avionics::display_data_for_python() {
-    printf("*123*--For_Python--*456* "
-           "ID:%d,PACKET:%u,PITCH:%.2f,YAW:%.2f,ROLL:%.2f,"
-           "AX:%.2f,AY:%.2f,AZ:%.2f,"
-           "TEMP:%.2f,PRESS:%.2f,ALT:%.2f,"
-           "MAX_ALT:%.2f,MAX_ALT_REACHED:%d,DEPLOYED:%d\n",
-           telemetry_packet.id, telemetry_packet.packet_num,
-           telemetry_packet.pitch, telemetry_packet.yaw, telemetry_packet.roll,
-           telemetry_packet.ax, telemetry_packet.ay, telemetry_packet.az,
-           telemetry_packet.temperature, telemetry_packet.pressure, telemetry_packet.altitude,
-           telemetry_packet.max_altitude,
-           static_cast<int>(telemetry_packet.max_altitude_reached),
-           static_cast<int>(telemetry_packet.deploy_main_para_parachute));
+void Master_avionics::on_receive_cb(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
+    if (info == nullptr || data == nullptr || len != sizeof(Ground_to_avionics_data)) {
+        ESP_LOGW("ESP-NOW-RECV", "Invalid packet size or null input");
+        return;
+    }
+    memcpy(&ground_to_avionics_data, data, sizeof(Ground_to_avionics_data));
+    ESP_LOGI(TAG, "Received ground_to_avionics_data");
+    //print_telemetry(ground_to_avionics_data);
+
 }
 
+
+esp_err_t Master_avionics::init_esp_now_callback() {
+    if (esp_now_register_recv_cb(on_receive_cb) != ESP_OK) {
+        ESP_LOGI(TAG, "Esp_now_init failed!");
+        return ESP_FAIL;
+    }
+    ESP_LOGI(TAG, "ESP-NOW ready and listening...");
+    return ESP_OK;
+}

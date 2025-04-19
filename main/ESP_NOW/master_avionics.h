@@ -17,16 +17,17 @@ public:
         const float& ax, const float& ay, const float& az,
         const float& temperature, const float& pressure, const float& altitude,
         const float& max_altitude, const bool& max_altitude_reached,
-        const bool& deploy_main_para_parachute);
+        const bool& deploy_main_para_parachute, const float& starting_altitude);
+    static void set_packet_number(const unsigned int n) {packet_number = n;}
 
-    static void display_data_for_python();
 
 private:
-    static esp_now_peer_info_t peerInfo;
-
-    static esp_err_t init_peer_info();
-    static void on_send_cb(const uint8_t* mac_addr, esp_now_send_status_t status);
     static unsigned int packet_number;
+
+    static esp_err_t init_esp_now_callback();
+
+    static void on_receive_cb(const esp_now_recv_info_t* info, const uint8_t* data, int len);
+
 };
 
 

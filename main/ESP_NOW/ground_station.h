@@ -11,12 +11,15 @@
 class Ground_station : public Esp_now_superclass {
 public:
     Ground_station(); //calls init_esp_now
-    static TelemetryPacket get_telemetry() {return telemetry_packet;}
 
+    static void my_data_populate(bool start);
+    static esp_err_t send_packet();
 private:
-    static void on_receive_cb(const esp_now_recv_info_t* info, const uint8_t* data, int len);
-    static esp_err_t init_esp_now();
+    static int packet_number;
 
+    static esp_err_t init_esp_now_callback();
+
+    static void on_receive_cb(const esp_now_recv_info_t* info, const uint8_t* data, int len); //like an override
 };
 
 
