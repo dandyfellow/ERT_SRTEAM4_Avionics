@@ -4,24 +4,24 @@
 
 #include "BMP280.h"
 
+#include <cmath>
 #include <cstring>
 #include <esp_log.h>
 #include <string>
 #include <cmath>
 #include <Tools.h>
+#include <constantes.h>
 
 #define I2C_MASTER_SDA GPIO_NUM_21
 #define I2C_MASTER_SCL GPIO_NUM_22
 
-#define MAIN_PARA_DEPLOY_HEIGHT 4 // meters //height where it deploys
-#define MAIN_PARA_DEPLOY_HEIGHT_TOLERANCE 4 // meters (tollerance for altitude impresition DO NOT CHANGE
-#define MAIN_PARA_DEPLOY_HEIGHT_WAIT 1 // seconds (height to wait before deploying the main parachute if it hasn't reached 150m)
 
 //===============================================PROTOYPES===================================================================================0
 float calculateHeightFromPressure(float pressure, float seaLevelPressure = 1013.25f);
 void calculate_max_altitude(const float altitude, float &max_altitude);
-void calculate_max_altitude_reached(const float altitude, const float max_altitude, bool &max_altitude_reached);
+void calculate_max_altitude_reached(const float altitude, const float max_altitude, bool &max_altitude_reached, const double previous_altitude);
 void calculate_main_para_deploy(const float &altitude, bool &deploy_main_para_parachute, const bool &max_altitude_reached, const float &max_altitude, const float &starting_alitude);
+void deploy_parachute_task(void* param);
 //===============================================END_OF_PROTOYPES===================================================================================0
 void BMP280::testing() {
     ESP_LOGI("BMP280", "Testing BMP280");
@@ -72,17 +72,29 @@ bool BMP280::read() // a rework of UncleRus' example
 {
     if (bmp280_read_float(&dev, &temperature, &pressure, NULL) != ESP_OK) {
         ESP_LOGE(TAG, "BMP280 reading failed");
-        temperature = 0;
-        pressure = 0; //since I will display the results regarding of if the readings failed, set to 0 to see the fail.
+        //temperature = 0; pressure = 0; //since I will display the results regarding of if the readings failed, set to 0 to see the fail.
+        temperature = previous_temperature; pressure = previous_pressure;
         return false;
     }
     // Convert pressure to altitude
-    altitude = calculateHeightFromPressure(pressure);
-    calculate_max_altitude(altitude, max_altitude);
-    if(max_altitude_reached == false) calculate_max_altitude_reached(altitude, max_altitude, max_altitude_reached);
-    if(deploy_main_para_parachute == false) calculate_main_para_deploy(altitude, deploy_main_para_parachute, max_altitude_reached, max_altitude, starting_alitude);
-    BMP280::deployement_sequence(deploy_main_para_parachute, deployed);
+    previous_temperature = temperature; previous_pressure = pressure; previous_altitude = altitude;
 
+    altitude = calculateHeightFromPressure(pressure);
+    //to avoid when the baro gives completely wrong values:
+    if(altitude > starting_altitude - 1000) { //about 100m
+        pressure = previous_pressure;
+        temperature = previous_temperature;
+        altitude = previous_altitude;
+    }
+
+    calculate_max_altitude(altitude, max_altitude);
+    if(max_altitude_reached == false) calculate_max_altitude_reached(altitude, max_altitude, max_altitude_reached, previous_altitude);
+    if(deploy_main_para_parachute == false) calculate_main_para_deploy(altitude, deploy_main_para_parachute, max_altitude_reached, max_altitude, starting_altitude);
+
+    if (deploy_main_para_parachute && !deployed) {
+        deployed = true;
+        xTaskCreate(deploy_parachute_task, "deploy_parachute", 2048, NULL, 5, NULL);
+    }
     return true;
 }
 
@@ -105,16 +117,16 @@ void BMP280::calibrate()
     }
     starting_temperature = sum_temperature / samples;
     starting_pressure = sum_pressure / samples;
-    starting_alitude = calculateHeightFromPressure(starting_pressure);
+    starting_altitude = calculateHeightFromPressure(starting_pressure);
 
-    ESP_LOGI(TAG, "BMP280 calibration done: Temperature: %.2f °C, Pressure: %.2f Pa, Altitude: %.2f m", starting_temperature, starting_pressure, starting_alitude);
+    ESP_LOGI(TAG, "BMP280 calibration done: Temperature: %.2f °C, Pressure: %.2f Pa, Altitude: %.2f m", starting_temperature, starting_pressure, starting_altitude);
 }
 
 
 void BMP280::display() {ESP_LOGI(TAG, "Temperature: %.2f °C | Pressure: %.2f Pa | Altitude: %.2f m",temperature, pressure, altitude);}
 
 float calculateHeightFromPressure(float pressure, float seaLevelPressure) {
-    return 44330.0f * (1.0f - pow((pressure/100) / seaLevelPressure, 0.1903f));
+    return 44330.0f * (1.0f - std::pow((pressure/100) / seaLevelPressure, 0.1903f));
 }
 
 void calculate_max_altitude(const float altitude, float &max_altitude) { //pass by reference
@@ -123,8 +135,15 @@ void calculate_max_altitude(const float altitude, float &max_altitude) { //pass 
     }
 }
 
-void calculate_max_altitude_reached(const float altitude, const float max_altitude, bool &max_altitude_reached) {
-    if(max_altitude - altitude > MAIN_PARA_DEPLOY_HEIGHT_TOLERANCE) {
+void calculate_max_altitude_reached(const float altitude, const float max_altitude, bool &max_altitude_reached, const double previous_altitude) {
+    static unsigned int count = 0;
+    double vertical_velocity = (altitude-previous_altitude)/(1./SAMPLE_FREQ); //to get time in seconds and not ms
+    if(max_altitude - altitude > MAIN_PARA_DEPLOY_HEIGHT_TOLERANCE and vertical_velocity < MAIN_PARA_DEPLOY_VELOCITY) {
+        count++;
+    } else {
+        count = 0;
+    }
+    if(count > 10) {
         max_altitude_reached = true;
         ESP_LOGI(TAG, "Max altitude reached: %.2f m", max_altitude);
     }
@@ -132,21 +151,25 @@ void calculate_max_altitude_reached(const float altitude, const float max_altitu
 
 void calculate_main_para_deploy(const float &altitude, bool &deploy_main_para_parachute, const bool &max_altitude_reached, const float &max_altitude, const float &starting_alitude) {
     if(max_altitude_reached) {
-        if(max_altitude < MAIN_PARA_DEPLOY_HEIGHT + starting_alitude) {
-            ESP_LOGI(TAG, "Max altitude reached under MAIN_PARA_DEPLOY_HEIGHT | max_altitude: %.2f m, MAIN_PARA_DEPLOY_HEIGHT: %.2d m", max_altitude, MAIN_PARA_DEPLOY_HEIGHT);
-            vTaskDelay(pdMS_TO_TICKS(MAIN_PARA_DEPLOY_HEIGHT_WAIT * 1000)); // wait for 2 seconds
+        if(max_altitude < (MAIN_PARA_DEPLOY_HEIGHT + starting_alitude)) {
+            Tools::delay(10*1000);
+            ESP_LOGI(TAG, "Max altitude reached under MAIN_PARA_DEPLOY_HEIGHT | max_altitude: %.2f m, MAIN_PARA_DEPLOY_HEIGHT: %.2f m", max_altitude, MAIN_PARA_DEPLOY_HEIGHT);
             deploy_main_para_parachute = true;
             ESP_LOGI(TAG, "Main parachute deploy variable set to true: %.2f m", altitude);
-        }
-        if(altitude < MAIN_PARA_DEPLOY_HEIGHT + starting_alitude) { //150m
-            deploy_main_para_parachute = true;
-            ESP_LOGI(TAG, "Main parachute deploy variable set to true: %.2f m", altitude);
+        } else {
+            if(altitude < MAIN_PARA_DEPLOY_HEIGHT + starting_alitude) { //150m
+                deploy_main_para_parachute = true;
+                ESP_LOGI(TAG, "Normal parachute sequence | max_altitude: %.2f m, MAIN_PARA_DEPLOY_HEIGHT: %.2f m", max_altitude, MAIN_PARA_DEPLOY_HEIGHT);
+                ESP_LOGI(TAG, "Main parachute deploy variable set to true: %.2f m", altitude);
+            }
         }
     }
 }
 
-void BMP280::deployement_sequence(bool deploy_main_para_parachute, bool deployed) {
-    if(deploy_main_para_parachute == true and deployed == false ) {
-        xTaskCreate(Tools::Blinking, "Blinking", configMINIMAL_STACK_SIZE , NULL, 5, NULL);
-    }
+void deploy_parachute_task(void* param) {
+    gpio_set_level(GPIO_NUM_4, 1);
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    gpio_set_level(GPIO_NUM_4, 0);
+    vTaskDelete(nullptr);  // Task cleans itself up
 }
+

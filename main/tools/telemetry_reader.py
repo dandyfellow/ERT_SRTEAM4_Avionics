@@ -24,7 +24,7 @@ log_writer.writerow([
 
 
 # === SERIAL CONFIG ===
-ser = serial.Serial('COM5', 115200, timeout=1)
+ser = serial.Serial('COM6', 115200, timeout=1)
 
 
 
@@ -175,8 +175,17 @@ def parse_serial():
 
                 packet_num_before = packet_num
 
+        elif line.startswith("System_armed_:_true"):
+            system_armed = True
+            print("Updated the python system_armed (if it works, remove the reset)")
+        elif line.startswith("System_armed_:_false"):
+            system_armed = False
+            print("Updated the python system_armed (if it works, remove the reset)")
+
         else:
             print(line)
+
+
     except Exception as e:
         print(f"[!] Serial parse error: {e}")
 
@@ -247,6 +256,10 @@ def main():
                     print("[→] Switches the system_armed boolean")
                     system_armed = (not system_armed)
 
+                elif event.key == K_b:
+                    print("[→] Turning GPIO2 on/off")
+                    ser.write(b"BLINK\n")
+
 
 
 
@@ -255,19 +268,19 @@ def main():
         parse_serial()
         draw()
 
-        log_writer.writerow([
-            datetime.now().isoformat(timespec='milliseconds'),
-            packet_num, pitch, yaw, roll,
-            ax, ay, az, temp, pressure, altitude,
-            max_altitude, int(max_altitude_reached), int(deploy_main_para_parachute)
-        ])
+        if(pitch != 0 and yaw != 0 and roll != 0 and ax != 0 and ay != 0 and az != 0 and temp != 0 and pressure != 0 and altitude != 0):
+            log_writer.writerow([
+                datetime.now().isoformat(timespec='milliseconds'),
+                packet_num, pitch, yaw, roll,
+                ax, ay, az, temp, pressure, altitude,
+                max_altitude, int(max_altitude_reached), int(deploy_main_para_parachute)
+            ])
 
 
         col_spacing = 150
         row_spacing = 25
         right_x = width - col_spacing  # shift left from right edge
         top_y = height - row_spacing
-
 
         draw_text(right_x - 3 * col_spacing, top_y - row_spacing - 15, f"-----------------------------------------------------------")
         if(max_altitude_reached == True):
@@ -303,17 +316,22 @@ def main():
         if(deploy_main_para_parachute == True):
             draw_text(10,  10, f"Main parachute deployed: {deploy_main_para_parachute}", color=(0,255,0))
         else :
-            draw_text(10,  10, f"Main parachute deployed: {deploy_main_para_parachute}")
-
+            if(max_altitude_reached == True):
+                draw_text(10,  10, f"Main parachute deployed: {deploy_main_para_parachute}", color=(100,100,100))
+            else:
+                draw_text(10,  10, f"Main parachute deployed: {deploy_main_para_parachute}", color=(200,200,200))
         if(system_armed == True):
             draw_text(10,  10+spacing, f"SYSTEM ARMED", color=(0,255,0))
         else:
             draw_text(10,  10+spacing, f"SYSTEM UNARMED", color=(180, 180, 180))
 
+
+
+
         pygame.display.flip()
         clock.tick(60)
 
-    time.sleep(1)
+    time.sleep(0.25)
     pygame.quit()
     ser.close()
     log_file.close()

@@ -38,7 +38,6 @@ bool HMC5883L::init() {
 bool HMC5883L::read() {
     if (qmc5883l_get_data(&dev, &data) == ESP_OK){return true;}
     ESP_LOGE(TAG, "Could not read QMC5883L data");
-    data.x = 0; data.y = 0; data.z = 0;
     return false;
 }
 void HMC5883L::display() {

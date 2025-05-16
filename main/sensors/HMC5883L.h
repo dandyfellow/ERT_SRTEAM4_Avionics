@@ -25,8 +25,6 @@ public:
     float get_mag_y() const {return data.y;}
     float get_mag_z() const {return data.z;}
 
-
-
     static void testing();
 private:
     qmc5883l_t  dev;

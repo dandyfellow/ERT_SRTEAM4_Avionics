@@ -3,6 +3,9 @@
 //
 
 #include "Tools.h"
+
+#include <esp_timer.h>
+
 #include "esp_now_superclass.h"
 
 extern "C" {
@@ -23,10 +26,26 @@ void Tools::Blinking(void* param) { //for testing purpouses
     while(count < 100) {
         led_on = !led_on;
         gpio_set_level(LED_PIN, led_on);
-        vTaskDelay(pdMS_TO_TICKS(100));
+        vTaskDelay(pdMS_TO_TICKS(500));
         //ESP_LOGI("Blinking counter", "%d", count);
         count++;
     }
+}
+
+void Tools::BlinkOnce(void* param) {
+#define LED_PIN GPIO_NUM_2
+    bool led_on = false;
+    unsigned int count = 0;
+    gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
+
+    while(count < 50) {
+        led_on = !led_on;
+        gpio_set_level(LED_PIN, led_on);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        //ESP_LOGI("Blinking counter", "%d", count);
+        count++;
+    }
+    gpio_set_level(LED_PIN, false);
 }
 
 //;
@@ -42,12 +61,21 @@ void Tools::displayIMUData(const IMUData10Axis& data) {
 }
 
 
-void Tools::deploy_main_parachute(void* param) {
-    #define MAIN_PARACHUTE_PIN GPIO_NUM_10 // set here
-
-    gpio_set_direction(MAIN_PARACHUTE_PIN, GPIO_MODE_OUTPUT);
-    gpio_set_level(MAIN_PARACHUTE_PIN, 1);
-    vTaskDelay(pdMS_TO_TICKS(5000)); // wait 5 seconds
-    gpio_set_level(MAIN_PARACHUTE_PIN, 0);
-
+void Tools::switchAxis(float& x, float& y, float& z) {
+    const float temp = z;
+    z = x;
+    x = -y;
+    y = -temp;
 }
+
+
+void Tools::delay(double ms) {
+    int64_t start_time = esp_timer_get_time(); // microseconds
+
+    while ((esp_timer_get_time() - start_time) < (int64_t)(ms * 1000)) {
+        taskYIELD();  // Allows other FreeRTOS tasks to run
+    }
+}
+
+
+

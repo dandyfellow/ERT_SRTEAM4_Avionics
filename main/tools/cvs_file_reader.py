@@ -5,7 +5,10 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 # === 1. Find the latest flight log ===
+latest_file = "unknown"
+
 def get_latest_log_file(log_dir="logs"):
+    global latest_file
     files = glob.glob(os.path.join(log_dir, "flight_*.csv"))
     if not files:
         print("[!] No flight logs found.")
@@ -13,6 +16,8 @@ def get_latest_log_file(log_dir="logs"):
     latest_file = max(files, key=os.path.getmtime)
     print(f"[✓] Loaded: {latest_file}")
     return latest_file
+
+    #latest_file = NAME   #change here
 
 # === 2. Load CSV into DataFrame ===
 def load_log_data(filename):
@@ -23,16 +28,16 @@ def load_log_data(filename):
 # === 3. Plot the telemetry ===
 def plot_telemetry(df):
     time = df["timestamp"]
-
+    global latest_file
     fig, axs = plt.subplots(4, 1, figsize=(12, 10), sharex=True)
-    fig.suptitle("Flight Telemetry")
+    fig.suptitle(f"Flight Telemetry : {latest_file}")
 
     # Orientation
     axs[0].plot(time, df["roll"], label="Roll [x]")
     axs[0].plot(time, df["pitch"], label="Pitch [y]")
     axs[0].plot(time, df["yaw"], label="Yaw [z]")
 
-    axs[0].set_ylabel("Degrees")
+    axs[0].set_ylabel("Radians")
     axs[0].legend()
     axs[0].grid(True)
 
@@ -68,12 +73,26 @@ def plot_telemetry(df):
 
 
 # Temperature & Pressure
-    axs[3].plot(time, df["temp"], label="Temperature (°C)")
-    axs[3].plot(time, df["pressure"], label="Pressure (Pa)")
-    axs[3].set_ylabel("Env")
+# Plot Temperature on primary y-axis
+    axs[3].plot(time, df["temp"], label="Temperature (°C)", color='tab:red')
+    axs[3].set_ylabel("Temperature (°C)", color='tab:red')
+    axs[3].tick_params(axis='y', labelcolor='tab:red')
+
+    # Create a twin y-axis for Pressure
+    ax3_twin = axs[3].twinx()
+    ax3_twin.plot(time, df["pressure"], label="Pressure (Pa)", color='tab:blue')
+    ax3_twin.set_ylabel("Pressure (Pa)", color='tab:blue')
+    ax3_twin.tick_params(axis='y', labelcolor='tab:blue')
+
+    # Set common x-axis label and grid
     axs[3].set_xlabel("Time")
-    axs[3].legend()
     axs[3].grid(True)
+
+    # Optional: add legends
+    lines_1, labels_1 = axs[3].get_legend_handles_labels()
+    lines_2, labels_2 = ax3_twin.get_legend_handles_labels()
+    axs[3].legend(lines_1 + lines_2, labels_1 + labels_2, loc='upper left')
+
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     plt.xticks(rotation=30)

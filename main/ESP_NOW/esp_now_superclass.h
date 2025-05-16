@@ -8,12 +8,12 @@
 #include <cstring>
 #include <esp_log.h>
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+//#include "freertos/task.h"
 #include "esp_now.h"
 #include "esp_wifi.h"
-#include "esp_event.h"
-#include "nvs_flash.h"
-#include <esp_mac.h>
+//#include "esp_event.h"
+//#include "nvs_flash.h"
+//#include <esp_mac.h>
 
 
 
@@ -51,7 +51,8 @@ typedef struct __attribute__((packed)) { // __attribute__((packed)) no padding b
     bool max_altitude_reached; //1 byte
     bool deploy_main_para_parachute; //1 byte
     float starting_altitude; //4bytes
-} TelemetryPacket; //total bytes = 53 bytes
+    float time; //4bytes
+} TelemetryPacket; //total bytes = 57 bytes
 
 
 typedef struct __attribute__((packed)) {
@@ -65,14 +66,13 @@ public:
     Esp_now_superclass();
 
     static esp_err_t readMacAddress(uint8_t baseMac[6]);
-    static void print_telemetry(const TelemetryPacket& packet);
+    static void print_telemetry(const TelemetryPacket& packet); //just for testing
 
     static unsigned int get_packet_number() {return  telemetry_packet.packet_num;}
     static TelemetryPacket get_telemetry() {return telemetry_packet;}
     static Ground_to_avionics_data get_ground_data() {return ground_to_avionics_data;}
 
     static void display_data_for_python();
-
 
 protected:
     static TelemetryPacket telemetry_packet;

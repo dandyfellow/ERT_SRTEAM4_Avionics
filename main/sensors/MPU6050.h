@@ -22,6 +22,7 @@ public:
     bool read() override;
     void display() override;
     void calibrate() override; //substacts the mean of the first 100 readings as bias
+
     mpu6050_acceleration_t get_accel() const {return accel;}
     mpu6050_rotation_t get_rotation() const {return rotation;}
 

@@ -10,21 +10,15 @@
 class Sensor {
 public:
 
-       // To be finished
-    virtual ~Sensor() = default;
+    virtual ~Sensor() = default; //I only use object, so no need for a complex destructor for pointers
 
     // virtual bool init() return true if the initiation has passed,
     // returns false if connection error
     virtual bool init() = 0;
 
-    // To be finished
+    // To be finished // purely for testing to the serial monitor
     virtual void display() = 0;
 
-    /* Originally, I wanted virtual bool read() to return true
-         * if the reading has passed, returns false if reading
-         * has failed. However to create Tasks, you need to pass
-         * a pointer to a void -> void* param. So there goes the logic :/
-         */
     virtual bool read() = 0;
 
     // averages the first 100 readings and stores it as bias
@@ -33,7 +27,6 @@ public:
     // just tests the skeleton of the project (outputs "testing
     // bla bla bla" in the serial monitor)
     static void testing();
-
 
 
 protected:

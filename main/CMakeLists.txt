@@ -5,12 +5,12 @@ idf_component_register(
             "sensors/MPU6050.cpp"
             "sensors/BMP280.cpp"
             "filters/MadgwickAHRS.cpp"
-            "utils/I2CManager.cpp"
             "sensors/HMC5883L.cpp"
             "utils/Tools.cpp"
             "ESP_NOW/master_avionics.cpp"
             "ESP_NOW/ground_station.cpp"
             "ESP_NOW/esp_now_superclass.cpp"
+            "utils/sd_card.cpp"
 
         INCLUDE_DIRS
             "."

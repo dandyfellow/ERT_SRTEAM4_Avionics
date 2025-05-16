@@ -27,8 +27,8 @@ Esp_now_superclass::Esp_now_superclass() {
     cfg = WIFI_INIT_CONFIG_DEFAULT();
     telemetry_packet = {};
     telemetry_packet.packet_num = 1;
-    if(init_wifi() != ESP_OK) ESP_LOGE(TAG, "ESP-NOW Init Failed");;
-
+    if(init_wifi() != ESP_OK) ESP_LOGE(TAG, "ESP-NOW Init Failed");
+    else ESP_LOGI(TAG, "ESP-NOW Init sucess");
 }
 
 

@@ -5,6 +5,7 @@
 
 #include "MPU6050.h"
 #include <cstdio>
+#include <Tools.h>
 
 extern "C" {
     #include <esp_log.h>
@@ -39,7 +40,7 @@ bool MPU6050::init() {
     ESP_ERROR_CHECK(mpu6050_init_desc(&dev, ADDR, static_cast<i2c_port_t>(0), I2C_MASTER_SDA, I2C_MASTER_SCL));
 
     unsigned int init_count(0);
-    while (init_count < 10)
+    while (init_count < 2)
     {
         esp_err_t res = i2c_dev_probe(&dev.i2c_dev, I2C_DEV_WRITE);
         if (res == ESP_OK)
@@ -53,7 +54,6 @@ bool MPU6050::init() {
     }
 
     ESP_ERROR_CHECK(mpu6050_init(&dev));
-
     //mpu6050_set_full_scale_gyro_range(&dev, MPU6050_GYRO_RANGE_250); //!< ± 250 °/s
     //mpu6050_set_full_scale_accel_range(&dev, MPU6050_ACCEL_RANGE_2); //!< ± 2g
 
@@ -61,7 +61,7 @@ bool MPU6050::init() {
     mpu6050_set_full_scale_accel_range(&dev, MPU6050_ACCEL_RANGE_16); //!< ± 16g
     /*
     MPU6050_GYRO_RANGE_250 = 0,  //!< ± 250 °/s
-    MPU6050_GYRO_RANGE_500,      //!< ± 500 °/s
+MPU6050_GYRO_RANGE_500,      //!< ± 500 °/s
     MPU6050_GYRO_RANGE_1000,     //!< ± 1000 °/s
     MPU6050_GYRO_RANGE_2000,     //!< ± 2000 °/s
 
@@ -84,12 +84,11 @@ bool MPU6050::read() {
 
         return true;
     }
-    accel.x = 0; accel.y = 0; accel.z = 0;
-    rotation.x = 0; rotation.y = 0; rotation.z = 0;
+    //accel.x = 0; accel.y = 0; accel.z = 0;
+    //rotation.x = 0; rotation.y = 0; rotation.z = 0;
     ESP_LOGE(TAG, "Could not read data");
     return false;
 }
-
 
 void MPU6050::calibrate() {
     ESP_LOGI(TAG, "Calibrating MPU6500...Reading 100 samples");
@@ -110,9 +109,9 @@ void MPU6050::calibrate() {
         }
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-    bias_accel.x = sum_accel.x / samples;
+    bias_accel.x = sum_accel.x / samples  - 1; // THE Z AXIS IS NOW THE X AXIS (FOR ROCKET MOUNT)
     bias_accel.y = sum_accel.y / samples;
-    bias_accel.z = sum_accel.z / samples - 1;// -1 to account for gravity (1g)
+    bias_accel.z = sum_accel.z / samples;// -1 to account for gravity (1g)
 
     bias_rotation.x = sum_rotation.x / samples;
     bias_rotation.y = sum_rotation.y / samples;
@@ -122,8 +121,6 @@ void MPU6050::calibrate() {
              bias_accel.x, bias_accel.y, bias_accel.z,
              bias_rotation.x, bias_rotation.y, bias_rotation.z);
 }
-
-
 
 void MPU6050::display() {
     ESP_LOGI(TAG, "Acceleration: x=%.4f   y=%.4f   z=%.4f", accel.x, accel.y, accel.z);

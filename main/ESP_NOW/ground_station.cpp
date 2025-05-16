@@ -38,13 +38,14 @@ void Ground_station::on_receive_cb(const esp_now_recv_info_t* info, const uint8_
     //print_telemetry(telemetry_packet);
 }
 
-void Ground_station::my_data_populate(bool start) {
+void Ground_station::my_data_populate(const bool start) {
     ground_to_avionics_data.start = start;
     ground_to_avionics_data.packet_num = packet_number++;
 }
 
 esp_err_t Ground_station::send_packet() {
     //printf("Packet ground_to_avionics_data #%d \n",  ground_to_avionics_data.counter++);
+    //ESP_LOGI(TAG, "Sent packet to avionics");
     return esp_now_send(mac_addrMASTER, reinterpret_cast<uint8_t *>(&ground_to_avionics_data), sizeof(ground_to_avionics_data));
 }
 
