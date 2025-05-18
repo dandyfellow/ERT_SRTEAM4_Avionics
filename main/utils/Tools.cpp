@@ -27,7 +27,7 @@ void Tools::Blinking(void* param) { //for testing purpouses
         led_on = !led_on;
         gpio_set_level(LED_PIN, led_on);
         vTaskDelay(pdMS_TO_TICKS(500));
-        //ESP_LOGI("Blinking counter", "%d", count);
+        ESP_LOGI("Blinking counter", "%d", count);
         count++;
     }
 }

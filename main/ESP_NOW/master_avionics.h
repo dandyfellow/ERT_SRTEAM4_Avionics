@@ -17,7 +17,8 @@ public:
         const float& ax, const float& ay, const float& az,
         const float& temperature, const float& pressure, const float& altitude,
         const float& max_altitude, const bool& max_altitude_reached,
-        const bool& deploy_main_para_parachute, const float& starting_altitude);
+        const bool& deploy_main_para_parachute, const float& starting_altitude,
+        const float& time);
 
     static void set_packet_number(const unsigned int n) {packet_number = n;}
 

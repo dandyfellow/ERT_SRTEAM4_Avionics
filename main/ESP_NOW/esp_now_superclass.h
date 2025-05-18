@@ -17,10 +17,13 @@
 
 
 
-//small breadboard esp32 (ground station) 14:2b:2f:ec:04:5c
-constexpr uint8_t mac_addrMASTER[6] = {0x14, 0x2B, 0x2F, 0xEC, 0x04, 0x5C};
-//large breadboard esp32 (telemetry / avionics)  f8:b3:b7:2f:56:c4
-constexpr uint8_t mac_addrSLAVE[6] = {0xF8, 0xB3, 0xB7, 0x2F, 0x56, 0xC4};
+//small breadboard esp32 (ground station) f8:b3:b7:2f:56:c4
+constexpr uint8_t mac_addrMASTER[6] = {0xF8, 0xB3, 0xB7, 0x2F, 0x56, 0xC4};
+
+//large breadboard esp32 (telemetry / avionics)  ec:e3:34:ce:34:90
+constexpr uint8_t mac_addrSLAVE[6] = {0xEC, 0xE3, 0x34, 0xCE, 0x34, 0x90};
+
+
 
 #define WIFI_CHANNEL 6
 

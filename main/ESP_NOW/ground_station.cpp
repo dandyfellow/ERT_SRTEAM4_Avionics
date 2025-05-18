@@ -23,7 +23,7 @@ int Ground_station::packet_number = 1;
 
 Ground_station::Ground_station() {
     ground_to_avionics_data.start = false;
-    init_peer_info(ESP_SLAVE_GROUND_STATION);
+    init_peer_info(ESP_MASTER_AVIONICS);
     init_esp_now_callback();
 }
 
@@ -34,7 +34,7 @@ void Ground_station::on_receive_cb(const esp_now_recv_info_t* info, const uint8_
         return;
     }
     memcpy(&telemetry_packet, data, sizeof(TelemetryPacket));
-    //ESP_LOGI(TAG, "Received telemetry_packet");
+    ESP_LOGI(TAG, "Received telemetry_packet");
     //print_telemetry(telemetry_packet);
 }
 
@@ -45,8 +45,14 @@ void Ground_station::my_data_populate(const bool start) {
 
 esp_err_t Ground_station::send_packet() {
     //printf("Packet ground_to_avionics_data #%d \n",  ground_to_avionics_data.counter++);
-    //ESP_LOGI(TAG, "Sent packet to avionics");
-    return esp_now_send(mac_addrMASTER, reinterpret_cast<uint8_t *>(&ground_to_avionics_data), sizeof(ground_to_avionics_data));
+    ESP_LOGI(TAG, "Sent packet to avionics");
+    esp_err_t result = esp_now_send(mac_addrSLAVE, reinterpret_cast<uint8_t *>(&ground_to_avionics_data), sizeof(ground_to_avionics_data));
+    if (result != ESP_OK) {
+        ESP_LOGE("GS", "Send failed: %d", result);
+    } else {
+        ESP_LOGI("GS", "Packet sent successfully");
+    }
+    return result;
 }
 
 esp_err_t Ground_station::init_esp_now_callback() {

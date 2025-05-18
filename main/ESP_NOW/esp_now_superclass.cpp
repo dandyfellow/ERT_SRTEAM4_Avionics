@@ -29,6 +29,11 @@ Esp_now_superclass::Esp_now_superclass() {
     telemetry_packet.packet_num = 1;
     if(init_wifi() != ESP_OK) ESP_LOGE(TAG, "ESP-NOW Init Failed");
     else ESP_LOGI(TAG, "ESP-NOW Init sucess");
+
+    uint8_t mac[6];
+    esp_wifi_get_mac(WIFI_IF_STA, mac);
+    ESP_LOGI("MAC", "STA MAC: %02x:%02x:%02x:%02x:%02x:%02x", MAC2STR(mac));
+
 }
 
 
@@ -85,6 +90,9 @@ esp_err_t Esp_now_superclass::init_peer_info(ESP_NOW_DEVICE device) {
     peerInfo.channel = WIFI_CHANNEL;
     peerInfo.ifidx = WIFI_IF_STA;
     peerInfo.encrypt = false;
+    ESP_LOGI(TAG, "Peer MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+           peerInfo.peer_addr[0], peerInfo.peer_addr[1], peerInfo.peer_addr[2],
+           peerInfo.peer_addr[3], peerInfo.peer_addr[4], peerInfo.peer_addr[5]);
     if(esp_now_add_peer(&peerInfo) != ESP_OK) {
         ESP_LOGE(TAG, "Peer init failed");
         return ESP_FAIL;

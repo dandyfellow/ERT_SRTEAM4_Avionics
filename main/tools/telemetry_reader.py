@@ -24,7 +24,7 @@ log_writer.writerow([
 
 
 # === SERIAL CONFIG ===
-ser = serial.Serial('COM6', 115200, timeout=1)
+ser = serial.Serial('COM5', 115200, timeout=1)
 
 
 

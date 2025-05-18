@@ -23,9 +23,9 @@ extern "C" { // C includes
 }
 
 //======================================================================================================================
-    #define MODE_AVIONICS // CHOSE ONE
-    //#define MODE_GROUND_STATION
-    #define MODE_SINGLE_ESP
+    //#define MODE_AVIONICS // CHOSE ONE
+    #define MODE_GROUND_STATION
+    //#define MODE_SINGLE_ESP
 //=================================================================================================================================0
 static const char *TAG = "Main"; // tag for logging
 long long boot_time = esp_timer_get_time();
@@ -68,7 +68,7 @@ extern "C" void app_main(void) {
 
 
     while(true) {
-        //system_armed = Master_avionics::get_ground_data().start;
+        system_armed = Master_avionics::get_ground_data().start;
         Master_avionics::set_packet_number(1);
         if(system_armed){
             // Initializing Madgwick filter
@@ -86,9 +86,9 @@ extern "C" void app_main(void) {
             long long starting_time = esp_timer_get_time();
 
             while(system_armed) { // Main loop
-                //system_armed = Master_avionics::get_ground_data().start;
-                ESP_LOGI(TAG, "Starting the main loop: System_armed: %d", system_armed);
-
+                system_armed = Master_avionics::get_ground_data().start;
+                //ESP_LOGI(TAG, "Starting the main loop: System_armed: %d", system_armed);
+                xTaskCreate(Tools::BlinkOnce, "BlinkOnce", 4096, NULL, 5, NULL);
                 //get data from sensors
                 if(!bmp.read()) bmp.init();
                 if(!mpu.read()) mpu.init();
@@ -110,18 +110,19 @@ extern "C" void app_main(void) {
                 data.time = time/1000000.;
                 data.pitch = madgwick.getPitchRadians(); data.yaw = madgwick.getYawRadians(); data.roll = madgwick.getRollRadians();
                 data.max_altitude_reached = bmp.get_max_altitude_reached();
-                data.max_altitude_reached = bmp.get_deploy_main_para_parachute();
+                data.deploy_main_para_parachute = bmp.get_deploy_main_para_parachute();
 
-                Master_avionics::my_data_populate(data.pitch, data.yaw, data.roll, data.ax, data.ay, data.az, data.temperature, data.pressure, bmp.get_altitude(), bmp.get_max_altitude(), data.max_altitude_reached, data.max_altitude_reached, bmp.get_starting_altitude());
+                Master_avionics::my_data_populate(data.pitch, data.yaw, data.roll, data.ax, data.ay, data.az, data.temperature, data.pressure, bmp.get_altitude(), bmp.get_max_altitude(), data.max_altitude_reached, data.max_altitude_reached, bmp.get_starting_altitude(), data.time);
 
                 Master_avionics::send_packet();
 
 #ifdef MODE_SINGLE_ESP
                 Master_avionics::display_data_for_python();
 #endif
-
-                if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
-                ESP_LOGI(TAG,"For time purpous");
+                if (SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000 / SAMPLE_FREQ));
+                //if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
+                vTaskDelay(pdMS_TO_TICKS(1));
+                //ESP_LOGI(TAG,"For time purpous");
             }
             system_armed = false;
         }
@@ -142,8 +143,10 @@ extern "C" void app_main(void) {
         Ground_station::my_data_populate(system_armed);
         if(Ground_station::send_packet() != ESP_OK) ESP_LOGE(TAG, "Failed to send packet from ground station to avionics");
 
-        if(SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000./SAMPLE_FREQ));
-        if(SAMPLE_FREQ == 0) vTaskDelay(pdMS_TO_TICKS(1)); // Keep cpu breathing
+        //if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
+        ESP_LOGI(TAG, "system_armed: %d", system_armed);
+        if (SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000 / SAMPLE_FREQ));
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 #endif

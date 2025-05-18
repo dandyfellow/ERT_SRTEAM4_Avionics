@@ -15,20 +15,21 @@ unsigned int Master_avionics::packet_number;
 
 Master_avionics::Master_avionics() {
     packet_number = 1;
-    init_peer_info(ESP_MASTER_AVIONICS);
+    init_peer_info(ESP_SLAVE_GROUND_STATION);
     init_esp_now_callback();
 }
 
 esp_err_t Master_avionics::send_packet() {
     //printf("Packet #%d \n",  telemetry_packet.counter++);
-    return esp_now_send(mac_addrSLAVE, reinterpret_cast<uint8_t *>(&telemetry_packet), sizeof(telemetry_packet));
+    return esp_now_send(mac_addrMASTER, reinterpret_cast<uint8_t *>(&telemetry_packet), sizeof(telemetry_packet));
 }
 
 void Master_avionics::my_data_populate(const float& pitch, const float& yaw, const float& roll,
     const float& ax, const float& ay, const float& az,
     const float& temperature, const float& pressure, const float& altitude,
     const float& max_altitude, const bool& max_altitude_reached,
-    const bool& deploy_main_para_parachute, const float& starting_altitude) {
+    const bool& deploy_main_para_parachute, const float& starting_altitude,
+    const float& time) {
 
     //ESP_LOGI(TAG, "Populating TelemetryPacket");
     Master_avionics::packet_number++;
@@ -48,6 +49,7 @@ void Master_avionics::my_data_populate(const float& pitch, const float& yaw, con
     telemetry_packet.max_altitude_reached = max_altitude_reached;
     telemetry_packet.deploy_main_para_parachute = deploy_main_para_parachute;
     telemetry_packet.starting_altitude = starting_altitude;
+    telemetry_packet.time = time;
 }
 
 void Master_avionics::on_receive_cb(const esp_now_recv_info_t* info, const uint8_t* data, int len) {
