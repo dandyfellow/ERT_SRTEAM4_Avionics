@@ -27,7 +27,7 @@ extern "C" { // C includes
     //#define MODE_GROUND_STATION
     #define MODE_SINGLE_ESP
 //=================================================================================================================================0
-//static const char *TAG = "Main"; // tag for logging
+static const char *TAG = "Main"; // tag for logging
 long long boot_time = esp_timer_get_time();
 bool system_armed = false;
 
@@ -63,14 +63,13 @@ extern "C" void app_main(void) {
 #ifdef MODE_SINGLE_ESP
     xTaskCreate(wait_for_uart_command, "wait_for_uart_command", 4096, NULL, 5, NULL);
 #endif
-    system_armed = true; //CHANGE LATER
+    system_armed = false; //CHANGE LATER
     Master_avionics avionics; //calls the constructor -> inits
 
 
-    while(system_armed) {
-        system_armed = Master_avionics::get_ground_data().start;
+    while(true) {
+        //system_armed = Master_avionics::get_ground_data().start;
         Master_avionics::set_packet_number(1);
-        system_armed = true; //CHANGE LATER
         if(system_armed){
             // Initializing Madgwick filter
             MadgwickAHRS madgwick;
@@ -86,10 +85,9 @@ extern "C" void app_main(void) {
 
             long long starting_time = esp_timer_get_time();
 
-            while(system_armed) {
-                system_armed = Master_avionics::get_ground_data().start;
-                system_armed = true; //CHANGE LATER
-
+            while(system_armed) { // Main loop
+                //system_armed = Master_avionics::get_ground_data().start;
+                ESP_LOGI(TAG, "Starting the main loop: System_armed: %d", system_armed);
 
                 //get data from sensors
                 if(!bmp.read()) bmp.init();
@@ -122,7 +120,8 @@ extern "C" void app_main(void) {
                 Master_avionics::display_data_for_python();
 #endif
 
-                if(SAMPLE_FREQ != 0) Tools::delay(1000./SAMPLE_FREQ);
+                if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
+                ESP_LOGI(TAG,"For time purpous");
             }
             system_armed = false;
         }
