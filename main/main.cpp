@@ -68,7 +68,7 @@ extern "C" void app_main(void) {
 
 
     while(true) {
-        system_armed = Master_avionics::get_ground_data().start;
+        system_armed = Master_avionics::get_ground_data().start; // SINGLE ESP MODE
         Master_avionics::set_packet_number(1);
         if(system_armed){
             // Initializing Madgwick filter
@@ -86,13 +86,18 @@ extern "C" void app_main(void) {
             long long starting_time = esp_timer_get_time();
 
             while(system_armed) { // Main loop
-                system_armed = Master_avionics::get_ground_data().start;
+                system_armed = Master_avionics::get_ground_data().start; // SINGLE ESP MODE
                 //ESP_LOGI(TAG, "Starting the main loop: System_armed: %d", system_armed);
-                xTaskCreate(Tools::BlinkOnce, "BlinkOnce", 4096, NULL, 5, NULL);
                 //get data from sensors
-                if(!bmp.read()) bmp.init();
-                if(!mpu.read()) mpu.init();
-                if(!hmc.read()) hmc.init();
+                if(!bmp.read()) {
+                    //bmp.init();
+                }
+                if(!mpu.read()) {
+                    //mpu.init();
+                }
+                if(!hmc.read()) {
+                    //hmc.init();
+                }
                 //bmp.display();mpu.display();hmc.display();
 
                 // process data from with Madgwick filter, all the data is in the data struct
@@ -119,14 +124,14 @@ extern "C" void app_main(void) {
 #ifdef MODE_SINGLE_ESP
                 Master_avionics::display_data_for_python();
 #endif
-                if (SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000 / SAMPLE_FREQ));
-                //if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
+                //if (SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000 / SAMPLE_FREQ));
+                if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
                 vTaskDelay(pdMS_TO_TICKS(1));
                 //ESP_LOGI(TAG,"For time purpous");
             }
             system_armed = false;
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 #endif
@@ -139,13 +144,17 @@ extern "C" void app_main(void) {
     Ground_station ground_station; //for constructor
 
     while(true) {
+        printf("TESTING");
+        Esp_now_superclass::display_data_for_python();
+
         Esp_now_superclass::display_data_for_python();
         Ground_station::my_data_populate(system_armed);
         if(Ground_station::send_packet() != ESP_OK) ESP_LOGE(TAG, "Failed to send packet from ground station to avionics");
 
-        //if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
         ESP_LOGI(TAG, "system_armed: %d", system_armed);
-        if (SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000 / SAMPLE_FREQ));
+
+        if(SAMPLE_FREQ != 0) Tools::delay(1000/SAMPLE_FREQ);
+        //if (SAMPLE_FREQ != 0) vTaskDelay(pdMS_TO_TICKS(1000 / SAMPLE_FREQ));
         vTaskDelay(pdMS_TO_TICKS(1));
     }
 }

@@ -21,7 +21,13 @@ Master_avionics::Master_avionics() {
 
 esp_err_t Master_avionics::send_packet() {
     //printf("Packet #%d \n",  telemetry_packet.counter++);
-    return esp_now_send(mac_addrMASTER, reinterpret_cast<uint8_t *>(&telemetry_packet), sizeof(telemetry_packet));
+    esp_err_t result = esp_now_send(mac_addrMASTER, reinterpret_cast<uint8_t *>(&telemetry_packet), sizeof(telemetry_packet));
+    if (result != ESP_OK) {
+        ESP_LOGE("AVIONICS", "Send failed: %d", result);
+    } else {
+        ESP_LOGI("AVIONICS", "Packet sent successfully");
+    }
+    return result;
 }
 
 void Master_avionics::my_data_populate(const float& pitch, const float& yaw, const float& roll,
