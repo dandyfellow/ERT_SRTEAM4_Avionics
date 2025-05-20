@@ -21,3 +21,5 @@ sdkconfig.old
 .python_env/
 *.env
 *.venv
+
+cmake-build-debug/

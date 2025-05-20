@@ -10,7 +10,6 @@ idf_component_register(
             "ESP_NOW/master_avionics.cpp"
             "ESP_NOW/ground_station.cpp"
             "ESP_NOW/esp_now_superclass.cpp"
-            "utils/sd_card.cpp"
 
         INCLUDE_DIRS
             "."
