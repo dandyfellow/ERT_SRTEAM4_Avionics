@@ -10,7 +10,6 @@ idf_component_register(
             "ESP_NOW/master_avionics.cpp"
             "ESP_NOW/ground_station.cpp"
             "ESP_NOW/esp_now_superclass.cpp"
-            "utils/sd_card.cpp"
 
         INCLUDE_DIRS
             "."
@@ -18,7 +17,7 @@ idf_component_register(
             "filters"
             "utils"
             "ESP_NOW"
-
+            "store"
 
         REQUIRES
             driver
@@ -30,6 +29,5 @@ idf_component_register(
             qmc5883l
             esp_timer
             QMC5883LArduino
-            esp_wifi esp_event nvs_flash
-
+            esp_wifi esp_event nvs_flash spiffs
 )

@@ -1,32 +1,32 @@
 //Created by maxwc on 02/04/2025.
+// This file has been edited by Elie "Fayorg" Baier (elie.baier@epfl.ch)
 
 #include "BMP280.h"
 #include "MPU6050.h"
-#include "HMC5883L.h"
 #include "Tools.h"
 #include "MadgwickAHRS.h"
 #include "../../components/QMC5883LArduino/QMC5883LCompass.h"
 #include "master_avionics.h"
 #include <ground_station.h>
-#include <constantes.h>
+// #include <constantes.h> TODO: IDK where the fuck is this file??? @dandyfellow ??
 
-extern "C" { // C includes
+extern "C" {
     #include "freertos/FreeRTOS.h"
     #include "esp_log.h"
     #include "freertos/task.h"
     #include "driver/gpio.h"
-    #include <driver/i2c.h>
-    #include <stdio.h> //equivalent of iostream but for c
+    #include <stdio.h>
     #include <string.h>
     #include "esp_timer.h"
-    #include "driver/uart.h"
 }
 
-//======================================================================================================================
-    //#define MODE_AVIONICS // CHOSE ONE
-    #define MODE_GROUND_STATION
+// ======================================================================================================================
+    #define MODE_AVIONICS // CHOSE ONE
+    // #define MODE_GROUND_STATION
     //#define MODE_SINGLE_ESP
-//=================================================================================================================================0
+// ======================================================================================================================
+
+
 static const char *TAG = "Main"; // tag for logging
 long long boot_time = esp_timer_get_time();
 bool system_armed = false;
@@ -59,17 +59,19 @@ void wait_for_uart_command(void* param) {
 
 #ifdef MODE_AVIONICS
 extern "C" void app_main(void) {
-    ESP_ERROR_CHECK(i2cdev_init()); //-> check read me for default values for the i2c bus
-#ifdef MODE_SINGLE_ESP
-    xTaskCreate(wait_for_uart_command, "wait_for_uart_command", 4096, NULL, 5, NULL);
-#endif
-    system_armed = false; //CHANGE LATER
-    Master_avionics avionics; //calls the constructor -> inits
+    ESP_ERROR_CHECK(i2cdev_init());
 
+    #ifdef MODE_SINGLE_ESP
+        xTaskCreate(wait_for_uart_command, "wait_for_uart_command", 4096, NULL, 5, NULL);
+    #endif
+
+    system_armed = false;
+    Master_avionics avionics;
 
     while(true) {
         system_armed = Master_avionics::get_ground_data().start; // SINGLE ESP MODE
         Master_avionics::set_packet_number(1);
+
         if(system_armed){
             // Initializing Madgwick filter
             MadgwickAHRS madgwick;
@@ -140,7 +142,9 @@ extern "C" void app_main(void) {
 
 #ifdef MODE_GROUND_STATION
 extern "C" void app_main(void) {
+    // Setting up the background tasks
     xTaskCreate(wait_for_uart_command, "wait_for_uart_command", 4096, NULL, 5, NULL);
+
     Ground_station ground_station; //for constructor
 
     while(true) {
