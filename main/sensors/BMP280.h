@@ -58,6 +58,14 @@ private:
 
     bool deploy_main_para_parachute = false;
     bool deployed = false;
+
+    float calculateHeightFromPressure(float p);
+    void calculate_max_altitude();
+    void calculate_max_altitude_reached();
+    void calculate_main_para_deploy();
+
+    //Tasks
+    void deploy_parachute_task(void* param);
 };
 
 
